@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "82106253478",
+    "project_id": "easyrent-fbfae",
+    "storage_bucket": "easyrent-fbfae.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82106253478:android:55d83e12dbb63906e5b467",
+        "android_client_info": {
+          "package_name": "com.kotlin.easyrent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtB0kdx0UoXnIfRMlbGqO6m1EguXBNg4E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
