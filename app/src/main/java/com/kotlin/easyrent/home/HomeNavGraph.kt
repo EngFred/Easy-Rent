@@ -31,7 +31,7 @@ fun HomeNavGraph(
         composable(
             route = HomeRoutes.Profile.destination
         ) {
-            ProfileScreen()
+            ProfileScreen( sharedViewModel = sharedViewModel )
         }
         detailGraph(navController = navController, modifier = modifier, sharedViewModel = sharedViewModel)
     }

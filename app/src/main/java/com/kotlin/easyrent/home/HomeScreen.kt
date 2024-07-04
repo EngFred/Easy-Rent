@@ -17,10 +17,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.kotlin.easyrent.R
 import com.kotlin.easyrent.core.presentation.SharedViewModel
 import com.kotlin.easyrent.core.routes.HomeRoutes
 import com.kotlin.easyrent.core.theme.poppinsBold
@@ -86,10 +88,10 @@ fun HomeScreen(
         }
     ) {
         val title = when (currentRoute) {
-            HomeRoutes.Tenants.destination -> "Tenants"
-            HomeRoutes.Payments.destination -> "Payments"
-            HomeRoutes.Expenses.destination -> "Expenses"
-            HomeRoutes.Rentals.destination -> "Rentals"
+            HomeRoutes.Tenants.destination -> stringResource(id = R.string.tenants)
+            HomeRoutes.Payments.destination -> stringResource(id = R.string.payments)
+            HomeRoutes.Expenses.destination -> stringResource(id = R.string.expenses)
+            HomeRoutes.Rentals.destination -> stringResource(id = R.string.rentals)
             else -> "EasyRent"
         }
         Scaffold(

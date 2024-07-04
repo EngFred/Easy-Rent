@@ -49,7 +49,7 @@ fun DrawerContent(
                         fontFamily = poppins, fontWeight = FontWeight.Bold
                     )
                 },
-                selected = route == HomeRoutes.Dashboard.destination,
+                selected = route == HomeRoutes.Dashboard.destination || route == HomeRoutes.Profile.destination,
                 onClick = {
                     navigateToHome()
                     closeDrawer()

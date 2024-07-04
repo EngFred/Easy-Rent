@@ -10,8 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.kotlin.easyrent.R
 import com.kotlin.easyrent.core.theme.poppins
 
 @Composable
@@ -30,13 +32,13 @@ fun Signup(
             modifier = Modifier.clickable {
                 onHomeClick()
             },
-            text = "Home",
+            text = stringResource(id = R.string.home),
             fontFamily = poppins,
             fontWeight = FontWeight.ExtraBold
         )
         Spacer(modifier = Modifier.size(26.dp))
         Text(
-            text = "Login",
+            text = stringResource(id = R.string.login),
             modifier = Modifier.clickable {
                 onLoginClick()
             },

@@ -11,10 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.kotlin.easyrent.R
 import com.kotlin.easyrent.core.routes.HomeRoutes
 import com.kotlin.easyrent.core.theme.poppins
 
@@ -22,8 +24,12 @@ import com.kotlin.easyrent.core.theme.poppins
 fun BottomBar(modifier: Modifier = Modifier, navController: NavHostController) {
 
     val bottomBarItemsLists = listOf(
-        BottomBarItem(route = HomeRoutes.Dashboard.destination, icon = Icons.Default.Dashboard, label = "Dashboard"),
-        BottomBarItem(route = HomeRoutes.Profile.destination, icon = Icons.Default.Person, label = "Profile")
+        BottomBarItem(route = HomeRoutes.Dashboard.destination, icon = Icons.Default.Dashboard, label = stringResource(
+            id = R.string.dashboard
+        )),
+        BottomBarItem(route = HomeRoutes.Profile.destination, icon = Icons.Default.Person, label = stringResource(
+            id = R.string.profile
+        ))
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
