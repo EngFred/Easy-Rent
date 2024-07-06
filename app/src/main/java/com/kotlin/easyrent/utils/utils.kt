@@ -6,23 +6,35 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.util.Log
+import coil.request.CachePolicy
+import coil.request.ErrorResult
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.kotlin.easyrent.core.prefrences.Language
+import kotlinx.coroutines.Dispatchers
+import okhttp3.Dispatcher
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
 fun setLocale(context: Context, language: Language) {
-    val locale = when (language) {
-        Language.Luganda -> Locale("lg")
-        Language.Swahili -> Locale("sw")
-        else -> Locale("en")
+    try {
+        val locale = when (language) {
+            Language.Luganda -> Locale("lg")
+            Language.Swahili -> Locale("sw")
+            else -> Locale("en")
+        }
+        Locale.setDefault(locale)
+        val resources = context.resources
+        val configuration = Configuration(resources.configuration)
+        configuration.setLocale(locale)
+        context.createConfigurationContext(configuration)
+        resources.updateConfiguration(configuration, resources.displayMetrics)
+    } catch (e: Exception){
+        Log.e("$", e.message.toString())
     }
-    Locale.setDefault(locale)
-    val resources = context.resources
-    val configuration = Configuration(resources.configuration)
-    configuration.setLocale(locale)
-    context.createConfigurationContext(configuration)
-    resources.updateConfiguration(configuration, resources.displayMetrics)
+
 }
 
 fun restartApplication(context: Context) {
@@ -61,4 +73,26 @@ fun showDatePickerDialog(
     }
 
     datePickerDialog.show()
+}
+
+fun getImageRequest( imageUrl: String, context: Context ): ImageRequest {
+    val listener = object : ImageRequest.Listener {
+        override fun onError(request: ImageRequest, result: ErrorResult) {
+            super.onError(request, result)
+        }
+
+        override fun onSuccess(request: ImageRequest, result: SuccessResult) {
+            super.onSuccess(request, result)
+        }
+    }
+    return ImageRequest.Builder(context)
+        .data(imageUrl)
+        .listener(listener)
+        .crossfade(true)
+        .dispatcher(Dispatchers.IO)
+        .memoryCacheKey(imageUrl)
+        .diskCacheKey(imageUrl)
+        .diskCachePolicy(CachePolicy.ENABLED)
+        .memoryCachePolicy(CachePolicy.ENABLED)
+        .build()
 }

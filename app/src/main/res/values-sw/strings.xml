@@ -1,0 +1,60 @@
+<resources>
+    <string name="app_name">Easy Rent</string>
+    <string name="tenants">Wapangaji</string>
+    <string name="payments">Malipo</string>
+    <string name="home">Nyumbani</string>
+    <string name="expenses">Gharama</string>
+    <string name="rentals">vyumba</string>
+    <string name="dashboard">Dashibodi</string>
+    <string name="profile">Wasifu</string>
+    <string name="login">Ingia</string>
+    <string name="sign_up">Jisajili</string>
+    <string name="name">jina</string>
+    <string name="email">barua pepe</string>
+    <string name="password">Nenosiri</string>
+    <string name="optional">Hiari</string>
+    <string name="confirm_password">Thibitisha Nenosiri</string>
+    <string name="continue_text">Endelea</string>
+    <string name="forgot_password">Umesahau nenosiri yako?</string>
+    <string name="choose_language">chagua lugha</string>
+    <string name="change_language">Changua lugha</string>
+    <string name="restart_app">anzisha upya app?</string>">
+    <string name="first_name">Jina la kwanza</string>
+    <string name="last_name">Jina la familia</string>
+    <string name="phone_number">Nambari ya simu</string>
+    <string name="date_of_birth">Tarehe ya kuzaliwa</string>
+    <string name="address">Anwani</string>
+    <string name="restart_app_message">Ili kubadilisha lugha, app itabidi iwashe upya</string>
+    <string name="yes">Ndio</string>
+    <string name="no">Hapana</string>
+    <string name="english">Kiingereza</string>
+    <string name="swahili">Swahili</string>
+    <string name="cancel">Ghairi</string>
+    <string name="luganda">Luganda</string>
+    <string name="dont_have_an_account_yet_message">Je, bado huna akaunti?</string>
+    <string name="already_have_an_account_message">Tayari una akaunti?</string>
+
+    <!--firebase -->
+    <string name="something_went_wrong">Hitilafu fulani imetokea</string>
+    <string name="invalid_email_or_password">Barua pepe au nenosiri batili</string>
+    <string name="user_is_null">Maelezo ya mtumiaji ni batili</string>
+    <string name="account_disabled">Akaunti hii imezimwa</string>
+    <string name="user_not_found">Hakuna akaunti iliyopatikana na barua pepe hii</string>
+    <string name="network_error">Tatizo la mtandao! Tafadhali jaribu tena.</string>
+    <string name="unknown_error">Hitilafu isiyojulikana imetokea! Tafadhali jaribu tena.</string>
+
+    <!--validation-->
+    <string name="empty_last_name">Jina la mwisho haliwezi kuwa tupu</string>
+    <string name="empty_email">Barua pepe haiwezi kuwa tupu</string>
+    <string name="empty_phone_number">Nambari ya mawasiliano haiwezi kuwa tupu</string>
+    <string name="short_last_name">Jina la mwisho lazima liwe na urefu wa angalau vibambo 3</string>
+    <string name="short_first_name">Jina la kwanza lazima liwe na urefu wa angalau vibambo 3</string>
+    <string name="empty_first_name">Jina la kwanza haliwezi kuwa tupu</string>
+    <string name="invalid_email">Barua pepe si sahihi</string>">
+    <string name="invalid_phone_number">Nambari ya simu si sahihi</string>">
+    <string name="empty_password">Nenosiri linahitajika</string>
+    <string name="short_password">Nenosiri lazima liwe na urefu wa angalau vibambo 8</string>
+    <string name="empty_confirm_password">Unahitaji kuthibitisha nenosiri lako</string>
+    <string name="password_dont_match">Nenosiri halilingani</string>
+
+</resources>

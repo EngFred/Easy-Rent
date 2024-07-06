@@ -22,6 +22,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -44,7 +45,7 @@ fun AuthTextField(
     imeAction: ImeAction = ImeAction.Next,
     isPassword: Boolean = false,
     isError: () -> Boolean? = { null },
-    errorMessage: () -> String? = { null },
+    errorMessage: () -> Int? = { null },
     isLogin: Boolean = true,
 ) {
 
@@ -57,8 +58,8 @@ fun AuthTextField(
             isError = isError() ?: false,
             shape = RoundedCornerShape(8.dp),
             supportingText = {
-                if (isError() == true) {
-                    Text(text = errorMessage() ?: "",
+                if (isError() == true && errorMessage() != null) {
+                    Text(text = stringResource(id = errorMessage()!!),
                         fontFamily = poppins,
                         fontWeight = FontWeight.Bold
                     )

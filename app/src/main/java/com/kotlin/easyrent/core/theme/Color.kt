@@ -11,6 +11,7 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 val myPrimary = Color(0xFF0abe8a) //#0abe8a
 val myBackground = Color(0xFF161213) //#161213
+val splashBg = Color(0xFF14293A) //#14293A
 
 val forestGreen = Color(0xFF228B22)
 val limeGreen = Color(0xFF32CD32)

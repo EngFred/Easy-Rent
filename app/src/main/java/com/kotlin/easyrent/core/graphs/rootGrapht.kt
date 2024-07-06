@@ -13,13 +13,14 @@ import com.kotlin.easyrent.home.HomeScreen
 fun RootGraph(
     modifier: Modifier = Modifier,
     sharedViewModel: SharedViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    startDestination: String
 ){
 
-    NavHost(navController = navController, route = Graphs.ROOT, startDestination = Graphs.AUTH) {
-        authGraph(navController, modifier, sharedViewModel)
+    NavHost(navController = navController, route = Graphs.ROOT, startDestination = startDestination) {
+        authGraph(navController = navController, sharedViewModel = sharedViewModel)
         composable(Graphs.HOME) {
-            HomeScreen(sharedViewModel = sharedViewModel)
+            HomeScreen(sharedViewModel = sharedViewModel, modifier = modifier)
         }
     }
 }

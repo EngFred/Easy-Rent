@@ -13,7 +13,7 @@ import com.kotlin.easyrent.features.auth.ui.screens.signup.Signup
 
 fun NavGraphBuilder.authGraph(
     navController: NavHostController,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     sharedViewModel: SharedViewModel
 ) {
     navigation(
@@ -24,7 +24,7 @@ fun NavGraphBuilder.authGraph(
         composable(
             route = AuthRoutes.Login.destination
         ) {
-            LoginScreen(onHomeClick = {
+            LoginScreen(navigateToHome = {
                 navController.navigate(Graphs.HOME){
                     launchSingleTop = true
                     popUpTo(Graphs.AUTH){
@@ -42,7 +42,7 @@ fun NavGraphBuilder.authGraph(
         }
 
         composable(AuthRoutes.Signup.destination) {
-            Signup(onHomeClick = {
+            Signup(navigateToHome = {
                 navController.navigate(Graphs.HOME){
                     launchSingleTop = true
                     popUpTo(Graphs.AUTH){

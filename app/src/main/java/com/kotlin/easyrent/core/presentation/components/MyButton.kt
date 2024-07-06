@@ -30,6 +30,7 @@ fun MyButton(
     cornerSize: Dp = 8.dp,
     height: Dp = 75.dp,
     backgroundColor: Color = myPrimary,
+    textColor: Color = Color.White,
     isLoading: () -> Boolean,
     enabled: Boolean = true
 ) {
@@ -42,7 +43,8 @@ fun MyButton(
             .height(height)
             .padding(vertical = 8.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = backgroundColor
+            containerColor = backgroundColor,
+            disabledContainerColor = Color.DarkGray
         ),
         shape = RoundedCornerShape(cornerSize)
     ) {
@@ -50,7 +52,7 @@ fun MyButton(
         if (!isLoading()) {
             Text(
                 text,
-                color = Color.White,
+                color = textColor,
                 fontFamily = poppinsBold,
                 fontWeight = FontWeight.ExtraBold
             )

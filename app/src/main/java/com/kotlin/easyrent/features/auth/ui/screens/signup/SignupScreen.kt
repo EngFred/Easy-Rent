@@ -1,7 +1,6 @@
 package com.kotlin.easyrent.features.auth.ui.screens.signup
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,40 +23,43 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.ImageLoader
+import coil.compose.AsyncImage
 import com.kotlin.easyrent.R
 import com.kotlin.easyrent.core.presentation.components.MyButton
-import com.kotlin.easyrent.core.theme.EasyRentTheme
 import com.kotlin.easyrent.core.theme.SetSystemBarColor
 import com.kotlin.easyrent.core.theme.myBackground
 import com.kotlin.easyrent.core.theme.myPrimary
 import com.kotlin.easyrent.core.theme.poppins
 import com.kotlin.easyrent.core.theme.poppinsBold
 import com.kotlin.easyrent.features.auth.ui.components.AuthTextField
+import com.kotlin.easyrent.features.auth.ui.viewModel.SignupViewModel
+import com.kotlin.easyrent.utils.Constants
+import com.kotlin.easyrent.utils.getImageRequest
 import com.kotlin.easyrent.utils.showDatePickerDialog
 
 @Composable
 fun Signup(
     modifier: Modifier = Modifier,
-    onHomeClick: () -> Unit,
-    onLoginClick: () -> Unit
+    navigateToHome: () -> Unit,
+    onLoginClick: () -> Unit,
+    viewModel: SignupViewModel = hiltViewModel()
 ) {
 
     SetSystemBarColor(
@@ -65,23 +67,36 @@ fun Signup(
         navigationBarColor = Color.Transparent
     )
 
-
+    val uiState = viewModel.uiState.collectAsState().value
     val context = LocalContext.current
-    var selectedDOB by rememberSaveable {
-        mutableStateOf("")
+
+    LaunchedEffect( uiState.signupError ) {
+        if ( uiState.signupError != null ) {
+            Toast.makeText(context, uiState.signupError, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect( uiState.signupSuccess ) {
+        if ( uiState.signupSuccess ) {
+            navigateToHome()
+        }
     }
 
     Box(
         modifier = modifier.fillMaxSize()
     ) {
 
+        val imageRequest = getImageRequest(Constants.BG_IMAGE, context)
         //the background image
-        Image(
-            modifier = Modifier.fillMaxSize(),
-            painter = painterResource(id = R.drawable.bg),
+        AsyncImage(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(myBackground),
+            model = imageRequest,
             contentDescription = null,
             contentScale = ContentScale.Crop
         )
+
 
         Box(modifier = Modifier
             .fillMaxSize()
@@ -91,7 +106,7 @@ fun Signup(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp, top = 50.dp, bottom = 20.dp)
+                .padding(start = 10.dp, end = 10.dp, top = 40.dp, bottom = 40.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
@@ -111,65 +126,105 @@ fun Signup(
 
                 AuthTextField(
                     placeHolder = stringResource(id = R.string.last_name),
-                    onTextChange = {},
-                    value = { "" }
+                    onTextChange = {
+                        viewModel.onEvent(SignupUiEvents.LastNameChanged(it))
+                    },
+                    value = { uiState.lastName },
+                    isLogin = false,
+                    errorMessage = { uiState.lastNameError },
+                    isError = { uiState.lastNameError != null }
                 )
-                Spacer(modifier = Modifier.size(8.dp))
+                Spacer(modifier = Modifier.size(4.dp))
                 AuthTextField(
                     placeHolder = stringResource(id = R.string.first_name),
-                    onTextChange = {},
-                    value = { "" }
+                    onTextChange = {
+                        viewModel.onEvent(SignupUiEvents.FirstNameChanged(it))
+                    },
+                    value = { uiState.firstName },
+                    isLogin = false,
+                    errorMessage = { uiState.firstNameError },
+                    isError = { uiState.firstNameError != null }
                 )
-                Spacer(modifier = Modifier.size(8.dp))
+                Spacer(modifier = Modifier.size(4.dp))
                 AuthTextField(
                     placeHolder = stringResource(id = R.string.email),
-                    onTextChange = {},
-                    value = { "" }
+                    onTextChange = {
+                        viewModel.onEvent(SignupUiEvents.EmailChanged(it))
+                    },
+                    value = { uiState.email },
+                    isLogin = false,
+                    errorMessage = { uiState.emailError },
+                    isError = { uiState.emailError != null },
+                    keyboardType = KeyboardType.Email
                 )
-                Spacer(modifier = Modifier.size(8.dp))
+                Spacer(modifier = Modifier.size(4.dp))
                 DobComponent(
                     onSelectDOB = {
-                        Toast.makeText(context, "Pick date", Toast.LENGTH_SHORT).show()
                         showDatePickerDialog(
                             context,
                             onSelectDOB = {
-                                selectedDOB = it
+                                viewModel.onEvent(SignupUiEvents.DOBChanged(it))
                             }
                         )
                     },
-                    selectedDDOB = { selectedDOB }
+                    selectedDDOB = { uiState.dob ?: "" }
                 )
                 Spacer(modifier = Modifier.size(8.dp))
                 AuthTextField(
                     placeHolder = stringResource(id = R.string.phone_number),
-                    onTextChange = {},
-                    value = { "" }
+                    onTextChange = {
+                        viewModel.onEvent(SignupUiEvents.ContactNumberChanged(it))
+                    },
+                    value = { uiState.contactNumber },
+                    isLogin = false,
+                    errorMessage = { uiState.contactNumberError },
+                    isError = { uiState.contactNumberError != null },
+                    keyboardType = KeyboardType.Number
                 )
-                Spacer(modifier = Modifier.size(8.dp))
+                Spacer(modifier = Modifier.size(4.dp))
                 AuthTextField(
                     placeHolder = "${stringResource(id = R.string.address)} (${stringResource(id = R.string.optional)})",
-                    onTextChange = {},
-                    value = { "" }
+                    onTextChange = {
+                          viewModel.onEvent(SignupUiEvents.AddressChanged(it))
+                    },
+                    value = { uiState.address ?: "" }
                 )
                 Spacer(modifier = Modifier.size(8.dp))
                 AuthTextField(
                     placeHolder = stringResource(id = R.string.password),
-                    onTextChange = {},
-                    value = { "" },
-                    isPassword = true
+                    onTextChange = {
+                        viewModel.onEvent(SignupUiEvents.PasswordChanged(it))
+                    },
+                    value = { uiState.password },
+                    isPassword = true,
+                    isLogin = false,
+                    errorMessage = { uiState.passwordError },
+                    isError = { uiState.passwordError != null },
+                    keyboardType = KeyboardType.Password
                 )
-                Spacer(modifier = Modifier.size(8.dp))
+                Spacer(modifier = Modifier.size(4.dp))
                 AuthTextField(
                     placeHolder = stringResource(id = R.string.confirm_password),
-                    onTextChange = {},
-                    value = { "" },
-                    isPassword = true
+                    onTextChange = {
+                        viewModel.onEvent(SignupUiEvents.ConfirmPasswordChanged(it))
+                    },
+                    value = { uiState.confirmPassword },
+                    isPassword = true,
+                    isLogin = false,
+                    errorMessage = { uiState.confirmPasswordError },
+                    isError = { uiState.confirmPasswordError != null },
+                    keyboardType = KeyboardType.Password
                 )
                 Spacer(modifier = Modifier.size(8.dp))
                 MyButton(
                     text = stringResource(id = R.string.continue_text),
-                    onClick = { onHomeClick() },
-                    isLoading = { false }
+                    onClick = {
+                        if ( !uiState.signupInProgress ) {
+                            viewModel.onEvent(SignupUiEvents.ConfirmButtonClicked)
+                        }
+                    },
+                    isLoading = { uiState.signupInProgress },
+                    enabled = uiState.isValidForm
                 )
                 Spacer(modifier = Modifier.size(16.dp))
                 Row(
@@ -197,17 +252,6 @@ fun Signup(
         }
 
     }
-}
-
-@Preview( showBackground = true )
-@Composable
-private fun LoginScreenPreview() {
-    EasyRentTheme {
-        Signup(onHomeClick = { /*TODO*/ }) {
-            
-        }
-    }
-
 }
 
 
