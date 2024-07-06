@@ -23,7 +23,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
+    primary = myPrimary,
     secondary = PurpleGrey40,
     tertiary = Pink40
 
@@ -65,17 +65,19 @@ fun EasyRentTheme(
 
 @Composable
 fun SetSystemBarColor(
-    barColor: Color = MaterialTheme.colorScheme.surface
+    statusBarColor: Color = MaterialTheme.colorScheme.surface,
+    navigationBarColor: Color = myBackground,
+    isAppearanceLightStatusBars: Boolean = !isSystemInDarkTheme(),
+    isAppearanceLightNavigationBars: Boolean = true
 ) {
     val view = LocalView.current
-    val isDarkTheme = isSystemInDarkTheme()
 
     SideEffect {
         val window = (view.context as Activity).window
-        window.statusBarColor = barColor.toArgb()
-        window.navigationBarColor = barColor.toArgb()
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDarkTheme
-        WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = true
+        window.statusBarColor = statusBarColor.toArgb()
+        window.navigationBarColor = navigationBarColor.toArgb()
+        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = isAppearanceLightStatusBars
+        WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = isAppearanceLightNavigationBars
     }
 
 }
