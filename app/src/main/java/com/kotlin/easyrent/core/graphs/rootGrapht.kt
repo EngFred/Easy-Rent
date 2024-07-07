@@ -20,7 +20,17 @@ fun RootGraph(
     NavHost(navController = navController, route = Graphs.ROOT, startDestination = startDestination) {
         authGraph(navController = navController, sharedViewModel = sharedViewModel)
         composable(Graphs.HOME) {
-            HomeScreen(sharedViewModel = sharedViewModel, modifier = modifier)
+            HomeScreen(
+                sharedViewModel = sharedViewModel,
+                modifier = modifier,
+                onLogout = {
+                    navController.navigate(Graphs.AUTH){
+                        popUpTo(Graphs.AUTH) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
     }
 }

@@ -33,11 +33,13 @@ fun DrawerContent(
     navigateToPayments: () -> Unit,
     navigateToExpenses: () -> Unit,
     navigateToRentals: () -> Unit,
-    closeDrawer: () -> Unit
+    closeDrawer: () -> Unit,
+    userProfilePhotoUrl: String?,
+    userName: String?
 ) {
 
     ModalDrawerSheet(modifier = Modifier) {
-        DrawerHeader(modifier)
+        DrawerHeader(modifier, userProfilePhotoUrl, userName)
         Spacer(modifier = Modifier.padding(5.dp))
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 13.dp)

@@ -9,7 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.kotlin.easyrent.R
 import com.kotlin.easyrent.features.auth.domain.modal.User
 import com.kotlin.easyrent.features.auth.domain.repository.AuthRepository
-import com.kotlin.easyrent.utils.Constants.LAND_LORDS
+import com.kotlin.easyrent.utils.Collections
 import com.kotlin.easyrent.utils.ServiceResponse
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -46,7 +46,7 @@ class AuthRepositoryImpl @Inject constructor(
             } else {
                 val firebaseUserId = authResult.user?.uid!!
                 val landlord = user.copy(id = firebaseUserId)
-                firestore.collection(LAND_LORDS).document(landlord.id).set(landlord).await()
+                firestore.collection(Collections.LANDLORDS).document(landlord.id).set(landlord).await()
                 ServiceResponse.Success(true)
             }
         }catch (e:Exception){

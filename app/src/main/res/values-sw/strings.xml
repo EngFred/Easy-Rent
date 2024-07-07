@@ -33,6 +33,17 @@
     <string name="luganda">Luganda</string>
     <string name="dont_have_an_account_yet_message">Je, bado huna akaunti?</string>
     <string name="already_have_an_account_message">Tayari una akaunti?</string>
+    <string name="say_something_about_yourself_message">Sema kitu kukuhusu…</string>
+    <string name="account_info_text">TAARIFA ZA AKAWUNTI</string>
+    <string name="log_out">Toka nje</string>
+    <string name="edit_bio">Hariri bio</string>
+    <string name="add_bio">Add bio</string>
+    <string name="edit_contact_number">Badilisha nambari ya simu</string>
+    <string name="edit_address">Hariri anwani</string>
+    <string name="edit_dob">Hariri DOB</string>
+    <string name="info_edited_successfully">Habari imebadilishwa!</string>
+    <string name="changing_info">Inabadilisha maelezo…</string>
+    <string name="not_provided">Haijatolewa</string>
 
     <!--firebase -->
     <string name="something_went_wrong">Hitilafu fulani imetokea</string>
@@ -56,5 +67,6 @@
     <string name="short_password">Nenosiri lazima liwe na urefu wa angalau vibambo 8</string>
     <string name="empty_confirm_password">Unahitaji kuthibitisha nenosiri lako</string>
     <string name="password_dont_match">Nenosiri halilingani</string>
+    <string name="invalid_form">Form si sahihi</string>
 
 </resources>

@@ -13,7 +13,6 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.kotlin.easyrent.core.prefrences.Language
 import kotlinx.coroutines.Dispatchers
-import okhttp3.Dispatcher
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -48,7 +47,7 @@ fun restartApplication(context: Context) {
 
 fun showDatePickerDialog(
     context: Context,
-    onSelectDOB: (String) -> Unit
+    onSelectDOB: (Long) -> Unit
 ) {
     val calendar = Calendar.getInstance()
     val today = calendar.time
@@ -60,9 +59,8 @@ fun showDatePickerDialog(
         { _, year, month, dayOfMonth ->
             val selectedDate = Calendar.getInstance().apply {
                 set(year, month, dayOfMonth)
-            }.time
-            val formattedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate)
-            onSelectDOB(formattedDate)
+            }.timeInMillis
+            onSelectDOB(selectedDate)
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
@@ -73,6 +71,11 @@ fun showDatePickerDialog(
     }
 
     datePickerDialog.show()
+}
+
+fun formatDateToString(dateInMills: Long) : String {
+    val formattedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(dateInMills)
+    return formattedDate
 }
 
 fun getImageRequest( imageUrl: String, context: Context ): ImageRequest {

@@ -8,7 +8,7 @@ data class User(
     val contactNumber: String,
     val address: String? = null,
     val profileImage: String? = null,
-    val dateOfBirth: String? = null,
+    val dateOfBirth: Long? = null,
     val joinDate: Long = System.currentTimeMillis(),
     val about: String? = null
 ) {

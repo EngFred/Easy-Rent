@@ -33,6 +33,17 @@
     <string name="luganda">Luganda</string>
     <string name="dont_have_an_account_yet_message">Tolina akawunti n\'okutuusa kati?</string>
     <string name="already_have_an_account_message">Wagulawo dda akawunti?</string>
+    <string name="say_something_about_yourself_message">Yogera ekintu ekikukwatako…</string>
+    <string name="account_info_text">EBIKWAATA KWA AKAAWUNTI ENO</string>
+    <string name="log_out">Fuluma</string>
+    <string name="edit_bio">Kyuusa bio</string>
+    <string name="add_bio">Add bio</string>
+    <string name="edit_contact_number">Kyuusa ennamba y\'essimu</string>
+    <string name="edit_address">Kyuusa endagiliro</string>
+    <string name="edit_dob">Kyuusa DOB</string>
+    <string name="info_edited_successfully">Info ekyuuse!</string>
+    <string name="changing_info">Okukyusa Info…</string>
+    <string name="not_provided">Tewereebwa</string>
 
     <!--firebase -->
     <string name="something_went_wrong">Waliwo ekyatatabudde bulungi</string>
@@ -56,4 +67,5 @@
     <string name="short_password">Paasiwaadi erina okuba nga erina ennukuta ezitakka wansi wa 3</string>
     <string name="empty_confirm_password">Kakasa password yo</string>
     <string name="password_dont_match">Paasiwaadi tezikwatagana</string>
+    <string name="invalid_form">Foomu sintuufu</string>
 </resources>

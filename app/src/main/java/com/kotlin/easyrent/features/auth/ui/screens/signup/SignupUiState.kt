@@ -12,7 +12,7 @@ data class SignupUiState(
     val email: String = "",
     @StringRes
     val emailError: Int? = null,
-    val dob: String? = null,
+    val dob: Long? = null,
     val contactNumber: String = "",
     @StringRes
     val contactNumberError: Int? = null,

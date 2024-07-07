@@ -1,4 +1,4 @@
-package com.kotlin.easyrent.features.profile.domain.usecase
+package com.kotlin.easyrent.core.usecses
 
 import com.kotlin.easyrent.core.prefrences.Language
 import com.kotlin.easyrent.core.prefrences.LanguagePreferencesManager

@@ -39,7 +39,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.ImageLoader
 import coil.compose.AsyncImage
 import com.kotlin.easyrent.R
 import com.kotlin.easyrent.core.presentation.components.MyButton
@@ -51,6 +50,7 @@ import com.kotlin.easyrent.core.theme.poppinsBold
 import com.kotlin.easyrent.features.auth.ui.components.AuthTextField
 import com.kotlin.easyrent.features.auth.ui.viewModel.SignupViewModel
 import com.kotlin.easyrent.utils.Constants
+import com.kotlin.easyrent.utils.formatDateToString
 import com.kotlin.easyrent.utils.getImageRequest
 import com.kotlin.easyrent.utils.showDatePickerDialog
 
@@ -167,7 +167,11 @@ fun Signup(
                             }
                         )
                     },
-                    selectedDDOB = { uiState.dob ?: "" }
+                    selectedDDOB = {
+                        if ( uiState.dob != null ) {
+                            formatDateToString(uiState.dob)
+                        } else ""
+                    }
                 )
                 Spacer(modifier = Modifier.size(8.dp))
                 AuthTextField(

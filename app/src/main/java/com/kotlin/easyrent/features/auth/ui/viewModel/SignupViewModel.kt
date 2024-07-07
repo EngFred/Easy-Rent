@@ -141,7 +141,7 @@ class SignupViewModel @Inject constructor(
             lastName = _uiState.value.lastName.trim(),
             email = _uiState.value.email.trim(),
             contactNumber = _uiState.value.contactNumber.trim(),
-            dateOfBirth = _uiState.value.dob?.trim(),
+            dateOfBirth = _uiState.value.dob,
             address = _uiState.value.address?.trim()
         )
         val response = signupUseCase.invoke(user, _uiState.value.password)
@@ -155,7 +155,7 @@ class SignupViewModel @Inject constructor(
                     )
                 }
             }
-            ServiceResponse.Loading -> Unit
+            ServiceResponse.Idle -> Unit
             is ServiceResponse.Success -> {
                 _uiState.update {
                     it.copy(

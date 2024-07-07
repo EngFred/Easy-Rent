@@ -16,7 +16,8 @@ import com.kotlin.easyrent.features.profile.ui.screens.ProfileScreen
 fun HomeNavGraph(
     modifier: Modifier = Modifier,
     sharedViewModel: SharedViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    onLogout: () -> Unit,
 ) {
     NavHost(
         navController = navController,
@@ -31,7 +32,11 @@ fun HomeNavGraph(
         composable(
             route = HomeRoutes.Profile.destination
         ) {
-            ProfileScreen( modifier = modifier, sharedViewModel = sharedViewModel )
+            ProfileScreen(
+                modifier = modifier,
+                sharedViewModel = sharedViewModel,
+                onLogout = onLogout
+            )
         }
         detailGraph(navController = navController, modifier = modifier, sharedViewModel = sharedViewModel)
     }

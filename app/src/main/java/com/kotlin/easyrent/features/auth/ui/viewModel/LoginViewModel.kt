@@ -84,7 +84,7 @@ class LoginViewModel @Inject constructor(
                     )
                 }
             }
-            ServiceResponse.Loading -> Unit
+            ServiceResponse.Idle -> Unit
             is ServiceResponse.Success -> {
                 _uiState.update {
                     it.copy(

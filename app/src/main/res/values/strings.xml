@@ -33,6 +33,17 @@
     <string name="luganda">Luganda</string>
     <string name="dont_have_an_account_yet_message">Don\'t have an account yet?</string>
     <string name="already_have_an_account_message">Already have an account?</string>
+    <string name="say_something_about_yourself_message">Say something about yourself…</string>
+    <string name="account_info_text">ACCOUNT INFORMATION</string>
+    <string name="log_out">Log out</string>
+    <string name="edit_bio">Edit bio</string>
+    <string name="add_bio">Add bio</string>
+    <string name="edit_contact_number">Edit contact number</string>
+    <string name="edit_address">Edit address</string>
+    <string name="edit_dob">Edit DOB</string>
+    <string name="info_edited_successfully">Info edited successfully!</string>
+    <string name="changing_info">Updating info…</string>
+    <string name="not_provided">Not provided</string>
 
     <!--firebase -->
     <string name="something_went_wrong">Something went wrong</string>
@@ -56,4 +67,5 @@
     <string name="short_password">Password must be at least 8 characters long</string>
     <string name="empty_confirm_password">Confirm password is required</string>
     <string name="password_dont_match">Password don\'t match</string>
+    <string name="invalid_form">Form is invalid</string>
 </resources>
