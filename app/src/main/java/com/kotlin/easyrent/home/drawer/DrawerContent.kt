@@ -65,7 +65,7 @@ fun DrawerContent(
                     text = stringResource(id = R.string.tenants),
                     fontFamily = poppins, fontWeight = FontWeight.Bold
                 ) },
-                selected = route == HomeRoutes.Tenants.destination,
+                selected = route == HomeRoutes.Tenants.destination || route.contains(HomeRoutes.TenantUpsert.destination),
                 onClick = {
                     navigateToTenants()
                     closeDrawer()
@@ -79,7 +79,7 @@ fun DrawerContent(
                     text = stringResource(id = R.string.payments),
                     fontFamily = poppins, fontWeight = FontWeight.Bold
                 ) },
-                selected = route == HomeRoutes.Payments.destination,
+                selected = route == HomeRoutes.Payments.destination || route.contains(HomeRoutes.PaymentUpsert.destination),
                 onClick = {
                     navigateToPayments()
                     closeDrawer()
@@ -93,7 +93,7 @@ fun DrawerContent(
                     text = stringResource(id = R.string.expenses),
                     fontFamily = poppins, fontWeight = FontWeight.Bold
                 ) },
-                selected = route == HomeRoutes.Expenses.destination,
+                selected = route == HomeRoutes.Expenses.destination || route.contains(HomeRoutes.ExpenseUpsert.destination),
                 onClick = {
                     navigateToExpenses()
                     closeDrawer()
@@ -107,7 +107,7 @@ fun DrawerContent(
                     text = stringResource(id = R.string.rentals),
                     fontFamily = poppins, fontWeight = FontWeight.Bold
                 ) },
-                selected = route == HomeRoutes.Rentals.destination,
+                selected = route == HomeRoutes.Rentals.destination || route.contains(HomeRoutes.RentalUpsert.destination),
                 onClick = {
                     navigateToRentals()
                     closeDrawer()

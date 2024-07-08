@@ -58,6 +58,7 @@ import com.kotlin.easyrent.features.profile.ui.components.AccountDetail
 import com.kotlin.easyrent.features.profile.ui.components.ProfileImage
 import com.kotlin.easyrent.features.profile.ui.viewModel.ProfileViewModel
 import com.kotlin.easyrent.utils.formatDateToString
+import com.kotlin.easyrent.utils.openGallery
 import com.kotlin.easyrent.utils.showDatePickerDialog
 
 @Composable
@@ -550,11 +551,6 @@ fun EditInfoDialog(
             }
         }
     )
-}
-
-// Function to handle opening the gallery
-private fun openGallery(launcher: ActivityResultLauncher<String>) {
-    launcher.launch("image/*")
 }
 
 enum class EditableInfo {

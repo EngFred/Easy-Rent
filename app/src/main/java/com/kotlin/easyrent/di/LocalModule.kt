@@ -5,6 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import androidx.room.Room
+import com.kotlin.easyrent.features.rentalManagement.data.cache.CacheDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,6 +22,18 @@ object LocalModule {
     @Provides
     fun providesDataStorePrefs( @ApplicationContext context: Context): DataStore<Preferences> = PreferenceDataStoreFactory.create {
         context.preferencesDataStoreFile("settings")
+    }
+
+    @Provides
+    @Singleton
+    fun providesCacheDatabase(
+        @ApplicationContext context: Context
+    ) : CacheDatabase {
+        return Room.databaseBuilder(
+            context,
+            CacheDatabase::class.java,
+            "easyRateCache.db"
+        ).fallbackToDestructiveMigration().build()
     }
 
 }

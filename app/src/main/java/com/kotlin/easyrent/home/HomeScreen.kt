@@ -39,6 +39,7 @@ import com.kotlin.easyrent.core.prefrences.Language
 import com.kotlin.easyrent.core.presentation.SharedViewModel
 import com.kotlin.easyrent.core.routes.HomeRoutes
 import com.kotlin.easyrent.core.theme.myBackground
+import com.kotlin.easyrent.core.theme.poppins
 import com.kotlin.easyrent.core.theme.poppinsBold
 import com.kotlin.easyrent.home.bottomBar.BottomBar
 import com.kotlin.easyrent.home.drawer.DrawerContent
@@ -270,10 +271,10 @@ fun ShowConfirmationDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = stringResource(R.string.restart_app))
+            Text(text = stringResource(R.string.restart_app), fontFamily = poppinsBold)
         },
         text = {
-            Text(stringResource(R.string.restart_app_message))
+            Text(stringResource(R.string.restart_app_message), fontFamily = poppins)
         },
         confirmButton = {
             Button(
@@ -282,14 +283,14 @@ fun ShowConfirmationDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                     onDismiss()
                 }
             ) {
-                Text(stringResource(id = R.string.yes))
+                Text(stringResource(id = R.string.yes), fontFamily = poppins)
             }
         },
         dismissButton = {
             Button(
                 onClick = onDismiss
             ) {
-                Text(stringResource(id = R.string.no))
+                Text(stringResource(id = R.string.no), fontFamily = poppins)
             }
         }
     )

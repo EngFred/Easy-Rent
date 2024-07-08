@@ -68,4 +68,13 @@
     <string name="empty_confirm_password">Confirm password is required</string>
     <string name="password_dont_match">Password don\'t match</string>
     <string name="invalid_form">Form is invalid</string>
+
+
+    <string name="empty_name">Name can\'t be empty</string>
+    <string name="short_name">Name must be at least 3 characters long</string>
+    <string name="empty_location">Location can\'t be empty</string>
+    <string name="empty_payment">Monthly payment is required</string>
+    <string name="invalid_payment">Invalid payment</string>
+    <string name="invalid_number_of_rooms">Invalid number of rooms</string>
+    <string name="empty_rooms">Number of rooms is required</string>
 </resources>

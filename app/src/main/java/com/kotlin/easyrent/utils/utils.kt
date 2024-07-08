@@ -6,13 +6,23 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Log
+import androidx.activity.result.ActivityResultLauncher
+import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import coil.request.CachePolicy
 import coil.request.ErrorResult
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.kotlin.easyrent.core.prefrences.Language
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -98,4 +108,55 @@ fun getImageRequest( imageUrl: String, context: Context ): ImageRequest {
         .diskCachePolicy(CachePolicy.ENABLED)
         .memoryCachePolicy(CachePolicy.ENABLED)
         .build()
+}
+
+fun openGallery(launcher: ActivityResultLauncher<String>) {
+    launcher.launch("image/*")
+}
+
+fun getTempImageUri(context: Context): Uri {
+    val tmpFile = File.createTempFile(
+        "tmp_image_file",
+        ".jpg",
+        context.getExternalFilesDir("EasyRent")
+    )
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.provider",
+        tmpFile
+    )
+}
+
+suspend fun compressImage(context: Context, imageUri: Uri, maxWidth: Int, maxHeight: Int, quality: Int): Uri? {
+    return withContext(Dispatchers.IO) {
+        val inputStream = context.contentResolver.openInputStream(imageUri) ?: return@withContext null
+        val originalBitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream.close()
+
+        val aspectRatio = originalBitmap.width.toFloat() / originalBitmap.height.toFloat()
+        val targetWidth: Int
+        val targetHeight: Int
+
+        if (originalBitmap.width > originalBitmap.height) {
+            targetWidth = maxWidth
+            targetHeight = (maxWidth / aspectRatio).toInt()
+        } else {
+            targetHeight = maxHeight
+            targetWidth = (maxHeight * aspectRatio).toInt()
+        }
+
+        val scaledBitmap = Bitmap.createScaledBitmap(originalBitmap, targetWidth, targetHeight, true)
+
+        val outputStream = ByteArrayOutputStream()
+        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+        val compressedByteArray = outputStream.toByteArray()
+
+        val compressedFile = File(context.cacheDir, "compressed_image.jpg")
+        val fileOutputStream = FileOutputStream(compressedFile)
+        fileOutputStream.write(compressedByteArray)
+        fileOutputStream.flush()
+        fileOutputStream.close()
+
+        compressedFile.toUri()
+    }
 }
