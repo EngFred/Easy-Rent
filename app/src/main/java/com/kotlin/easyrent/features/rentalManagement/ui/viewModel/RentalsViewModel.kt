@@ -77,6 +77,15 @@ class RentalsViewModel @Inject constructor(
         }
     }
 
+    fun resetErrorState() {
+        _uiState.update {
+            it.copy(
+                deletedRentalId = "",
+                rentalDeleteError = null
+            )
+        }
+    }
+
     private fun getAllRentals() = viewModelScope.launch {
         getAllRentalsUseCase.invoke().collectLatest { res ->
             when(res) {

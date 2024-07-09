@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
-import com.kotlin.easyrent.features.rentalManagement.data.cache.CacheDatabase
+import com.kotlin.easyrent.core.cache.CacheDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -5,7 +5,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kotlin.easyrent.R
+import com.kotlin.easyrent.features.rentalManagement.data.modal.RentalStatus
 import com.kotlin.easyrent.features.rentalManagement.domain.modal.Rental
+import com.kotlin.easyrent.features.rentalManagement.domain.usecase.DeleteRentalUseCase
 import com.kotlin.easyrent.features.rentalManagement.domain.usecase.GetRentalByIdUseCase
 import com.kotlin.easyrent.features.rentalManagement.domain.usecase.UpsertRentalUseCase
 import com.kotlin.easyrent.features.rentalManagement.ui.screens.upsert.UpsertRentalUiEvents
@@ -13,6 +15,7 @@ import com.kotlin.easyrent.features.rentalManagement.ui.screens.upsert.UpsertRen
 import com.kotlin.easyrent.utils.Keys
 import com.kotlin.easyrent.utils.ServiceResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -24,6 +27,7 @@ import javax.inject.Inject
 class UpsertRentalViewModel @Inject constructor(
     private val upsertRentalUseCase: UpsertRentalUseCase,
     private val getRentalByIdUseCase: GetRentalByIdUseCase,
+    private val deleteRentalUseCase: DeleteRentalUseCase,
     savedStateHandle: SavedStateHandle
 ) :  ViewModel() {
 
@@ -36,6 +40,11 @@ class UpsertRentalViewModel @Inject constructor(
     init {
 
         if ( rentalId != null ) {
+            _uiState.update {
+                it.copy(
+                    rentalStatus = RentalStatus.Old
+                )
+            }
             getRentalById(rentalId)
         } else {
             _uiState.update {
@@ -49,11 +58,12 @@ class UpsertRentalViewModel @Inject constructor(
 
 
     fun onEvent( event: UpsertRentalUiEvents ) {
-        if( _uiState.value.upsertError !=  null || _uiState.value.fetchError != null) {
+        if( _uiState.value.upsertError !=  null || _uiState.value.fetchError != null || _uiState.value.deleteRentalError != null) {
             _uiState.update {
                 it.copy(
                     upsertError = null,
-                    fetchError = null
+                    fetchError = null,
+                    deleteRentalError = null
                 )
             }
         }
@@ -106,7 +116,7 @@ class UpsertRentalViewModel @Inject constructor(
             }
             UpsertRentalUiEvents.AddedRental -> {
                 if ( _uiState.value.isFormValid ) {
-                    addUpdateRental()
+                    addUpdateRental(_uiState.value.rentalStatus,_uiState.value.oldRentalName ?: "")
                 }
             }
 
@@ -115,6 +125,17 @@ class UpsertRentalViewModel @Inject constructor(
                     it.copy(
                         showPhotoOptionsDialog = !it.showPhotoOptionsDialog
                     )
+                }
+            }
+
+            UpsertRentalUiEvents.DeletedRental -> {
+                _uiState.update {
+                    it.copy(
+                        deletingRental = true
+                    )
+                }
+                _uiState.value.oldRental?.let {
+                    deleteRental(it)
                 }
             }
         }
@@ -136,42 +157,63 @@ class UpsertRentalViewModel @Inject constructor(
         }
     }
 
-    private fun addUpdateRental() = viewModelScope.launch {
-        _uiState.update {
-            it.copy(
-                upserting = true
-            )
-        }
+    private fun addUpdateRental(rentalStatus: RentalStatus, oldRentalName: String) = viewModelScope.launch {
 
         val rental = Rental(
             id = _uiState.value.rentalId ?: UUID.randomUUID().toString(),
-            name = _uiState.value.name!!,
-            location = _uiState.value.location!!,
+            name = _uiState.value.name!!.trim(),
+            location = _uiState.value.location!!.trim(),
             image = _uiState.value.imageUrl,
             noOfRooms = _uiState.value.noOfRooms!!.toInt(),
             monthlyPayment = _uiState.value.monthlyPayment!!.toLong(),
-            description = _uiState.value.description
+            description = _uiState.value.description?.trim()
         )
-        val res = upsertRentalUseCase.invoke(rental)
-        Log.v("TAG", "Task done!")
-        when(res) {
-            is ServiceResponse.Error -> {
-                _uiState.update {
-                    it.copy(
-                        upserting = false,
-                        upsertError = res.message
-                    )
+
+        _uiState.update {
+            it.copy(
+                madeChanges = rental != it.oldRental?.copy(isSynced = false)
+            )
+        }
+
+        Log.v("TAG", "MadeChanges: ${_uiState.value.madeChanges}")
+        Log.v("TAG", "New Rental: $rental")
+        Log.v("TAG", "Old Rental: ${_uiState.value.oldRental}")
+
+        if ( _uiState.value.madeChanges ) {
+            _uiState.update {
+                it.copy(
+                    upserting = true
+                )
+            }
+            val res = upsertRentalUseCase.invoke(rental, rentalStatus, oldRentalName)
+            Log.v("TAG", "Task done!")
+            when(res) {
+                is ServiceResponse.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            upserting = false,
+                            upsertError = res.message
+                        )
+                    }
+                }
+                ServiceResponse.Idle -> Unit
+                is ServiceResponse.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            taskSuccessfull = true
+                        )
+                    }
                 }
             }
-            ServiceResponse.Idle -> Unit
-            is ServiceResponse.Success -> {
-                _uiState.update {
-                    it.copy(
-                        upsertSuccessful = true
-                    )
-                }
+        } else {
+            Log.v("TAG", "No changes were made!")
+            _uiState.update {
+                it.copy(
+                    taskSuccessfull = true
+                )
             }
         }
+
 
     }
 
@@ -192,19 +234,43 @@ class UpsertRentalViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        name = res.data?.name?.trim(),
-                        location = res.data?.location?.trim(),
+                        name = res.data?.name,
+                        location = res.data?.location,
                         noOfRooms = res.data?.noOfRooms?.toString(),
-                        imageUrl = res.data?.image?.trim(),
+                        imageUrl = res.data?.image,
                         monthlyPayment = res.data?.monthlyPayment?.toString(),
                         rentalId = res.data?.id,
-                        description = res.data?.description?.trim()
+                        description = res.data?.description,
+                        oldRentalName = res.data?.name,
+                        oldRental = res.data
                     )
                 }
             }
         }
     }
 
+    private fun deleteRental(rental: Rental) = viewModelScope.launch( Dispatchers.IO ) {
+        val res = deleteRentalUseCase.invoke(rental)
+        Log.v("TAG", "Task done!")
+        when(res) {
+            is ServiceResponse.Error -> {
+                _uiState.update {
+                    it.copy(
+                        deletingRental = false,
+                        deleteRentalError = res.message
+                    )
+                }
+            }
+            ServiceResponse.Idle -> Unit
+            is ServiceResponse.Success -> {
+                _uiState.update {
+                    it.copy(
+                        taskSuccessfull = true
+                    )
+                }
+            }
+        }
+    }
 
     private fun  validateName( name: String ) {
         val nameError = when {
@@ -253,6 +319,16 @@ class UpsertRentalViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 noOfRoomsError = noOfRoomsError
+            )
+        }
+    }
+
+    fun resetErrorState() {
+        _uiState.update {
+            it.copy(
+                fetchError = null,
+                upsertError = null,
+                deleteRentalError = null
             )
         }
     }

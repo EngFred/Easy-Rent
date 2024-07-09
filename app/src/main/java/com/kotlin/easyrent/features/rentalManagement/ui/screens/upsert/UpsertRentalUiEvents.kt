@@ -8,6 +8,7 @@ sealed class UpsertRentalUiEvents {
     data class ImageUrlChanged(val imageUrl: String) : UpsertRentalUiEvents()
     data class DescriptionChanged(val description: String) : UpsertRentalUiEvents()
     data object AddedRental : UpsertRentalUiEvents()
+    data object DeletedRental : UpsertRentalUiEvents()
     data object ShowPhotoOptionsDialogToggled : UpsertRentalUiEvents()
 
 }

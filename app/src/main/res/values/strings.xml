@@ -77,4 +77,6 @@
     <string name="invalid_payment">Invalid payment</string>
     <string name="invalid_number_of_rooms">Invalid number of rooms</string>
     <string name="empty_rooms">Number of rooms is required</string>
+
+    <string name="tenants_exist_error">There are tenants inside this rental! Please remove all tenants first.</string>
 </resources>

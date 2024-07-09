@@ -23,9 +23,12 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 fun setLocale(context: Context, language: Language) {
     try {
@@ -159,4 +162,16 @@ suspend fun compressImage(context: Context, imageUri: Uri, maxWidth: Int, maxHei
 
         compressedFile.toUri()
     }
+}
+
+fun formatCurrency(amount: Double): String {
+    val numberFormat = NumberFormat.getNumberInstance(Locale.US)
+    val formattedAmount = numberFormat.format(amount)
+    return "UGX.$formattedAmount"
+}
+
+fun calculateDaysInRental(moveInDate: Long): Long {
+    val currentDate = Date().time
+    val diffInMillis = currentDate - moveInDate
+    return TimeUnit.MILLISECONDS.toDays(diffInMillis)
 }

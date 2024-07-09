@@ -1,14 +1,21 @@
 package com.kotlin.easyrent.features.rentalManagement.ui.screens.upsert
 
 import androidx.annotation.StringRes
+import com.kotlin.easyrent.features.rentalManagement.data.modal.RentalStatus
+import com.kotlin.easyrent.features.rentalManagement.domain.modal.Rental
 
 data class UpsertRentalUiState(
     val rentalId: String? = null,
     val isLoading: Boolean = true,
     val upserting: Boolean = false,
-    val upsertSuccessful: Boolean = false,
+    val deletingRental: Boolean = false,
+    val taskSuccessfull: Boolean = false,
     @StringRes
     val upsertError: Int? = null,
+
+    @StringRes
+    val deleteRentalError: Int? = null,
+
     @StringRes
     val fetchError: Int? = null,
 
@@ -29,5 +36,10 @@ data class UpsertRentalUiState(
 
     val isFormValid: Boolean = false,
 
-    val showPhotoOptionsDialog: Boolean = false
+    val showPhotoOptionsDialog: Boolean = false,
+
+    val rentalStatus: RentalStatus = RentalStatus.New,
+    val oldRentalName: String? = null,
+    val oldRental: Rental? = null,
+    val madeChanges: Boolean = false,
 )

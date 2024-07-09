@@ -3,17 +3,21 @@ package com.kotlin.easyrent.features.rentalManagement.data.repository
 import android.content.Context
 import android.util.Log
 import androidx.core.net.toUri
+import androidx.room.withTransaction
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.toObjects
 import com.google.firebase.storage.FirebaseStorage
 import com.kotlin.easyrent.R
-import com.kotlin.easyrent.features.rentalManagement.data.cache.CacheDatabase
+import com.kotlin.easyrent.core.cache.CacheDatabase
 import com.kotlin.easyrent.features.rentalManagement.data.mapper.toDomain
 import com.kotlin.easyrent.features.rentalManagement.data.mapper.toEntity
+import com.kotlin.easyrent.features.rentalManagement.data.modal.RentalStatus
 import com.kotlin.easyrent.features.rentalManagement.domain.modal.Rental
 import com.kotlin.easyrent.features.rentalManagement.domain.repository.RentalsRepository
+import com.kotlin.easyrent.features.tenantManagement.domain.modal.Tenant
 import com.kotlin.easyrent.utils.Collections
 import com.kotlin.easyrent.utils.Constants
 import com.kotlin.easyrent.utils.ServiceResponse
@@ -33,7 +37,7 @@ class RentalsRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
     private val firebaseStorage: FirebaseStorage,
-    cache: CacheDatabase,
+    private val cache: CacheDatabase,
     private val context: Context
 ) : RentalsRepository {
 
@@ -42,8 +46,40 @@ class RentalsRepositoryImpl @Inject constructor(
     }
     
     private val dao = cache.rentalsDao()
+    private val tenantsDao = cache.tenantsDao()
 
-    override suspend fun upsertRental(rental: Rental): ServiceResponse<Unit> {
+    private suspend fun updateTenantRentalInfo(rentalId: String, rentalName: String){
+        var existsTenantsToUpdate = false
+        val tenants = tenantsDao.getAllTenantsForRental(rentalId)
+        if ( tenants.isNotEmpty() ) {
+            existsTenantsToUpdate = true
+        }
+        if ( existsTenantsToUpdate ) {
+            cache.withTransaction {
+                tenants.forEach { tenant ->
+                    tenantsDao.upsertTenant(tenant.copy(rentalName = rentalName, isSynced = false))
+                }
+            }
+            val tenantsCollection = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!).collection(Collections.TENANTS)
+            val firestoreTenants = tenantsCollection.get().await().toObjects<Tenant>()
+            firestore.runTransaction { transaction ->
+                firestoreTenants.forEach { tenant ->
+                    transaction.update(
+                        tenantsCollection.document(tenant.id),
+                        "rentalName", rentalName
+                    )
+                }
+            }.await()
+            cache.withTransaction {
+                tenants.forEach { tenant ->
+                    tenantsDao.upsertTenant(tenant.copy(rentalName = rentalName, isSynced = true))
+                }
+            }
+        }
+
+    }
+
+    override suspend fun upsertRental(rental: Rental, rentalStatus: RentalStatus, oldRentalName: String): ServiceResponse<Unit> {
         return try {
             Log.v(TAG, "Upserting...")
             if ( rental.image != null && !rental.image.contains("firebasestorage") ) {
@@ -58,6 +94,10 @@ class RentalsRepositoryImpl @Inject constructor(
                     val updatedRental = rental.copy(image = downloadUrl.toString())
                     Log.v(TAG, "Image uploaded successfully to storage! updating rental data in cache...")
                     dao.upsertRental(updatedRental.toEntity())
+                    if ( rentalStatus == RentalStatus.Old && oldRentalName != rental.name ) {
+                        Log.v(TAG, "Updating tenants associated with this rental (name)...")
+                        updateTenantRentalInfo(updatedRental.id, updatedRental.name)
+                    }
                     Log.v(TAG, "Rental data updated successfully in cache! uploading rental data to firestore...")
                     firestore.runTransaction {
                         val document = it.get(firestore.collection(Collections.LANDLORDS)
@@ -79,6 +119,10 @@ class RentalsRepositoryImpl @Inject constructor(
                 }
             } else {
                 dao.upsertRental(rental.toEntity())
+                if ( rentalStatus == RentalStatus.Old && oldRentalName != rental.name ) {
+                    Log.v(TAG, "Updating tenants associated with this rental (name)...")
+                    updateTenantRentalInfo(rental.id, rental.name)
+                }
                 Log.v(TAG, "rental data upserted successfully in cache! uploading rental data to firestore...")
                 firestore.runTransaction {
                     val document = it.get(firestore.collection(Collections.LANDLORDS)
@@ -107,32 +151,42 @@ class RentalsRepositoryImpl @Inject constructor(
         }
     }
 
+
+    private suspend fun checkTenantsInRental(rentalId: String) : Boolean {
+        val tenants = tenantsDao.getAllTenantsForRental(rentalId)
+        return tenants.isNotEmpty()
+    }
+
     override suspend fun deleteRental(rental: Rental): ServiceResponse<Unit> {
         return try {
             var deletedFromFirestore = false
-            firestore.runTransaction {
-                val document = it.get(firestore.collection(Collections.LANDLORDS)
-                    .document(firebaseAuth.uid!!)
-                    .collection(Collections.RENTALS)
-                    .document(rental.id))
-
-                if ( document.exists() ) {
-                    it.delete(document.reference)
-                    deletedFromFirestore = true
-                }
-            }.await()
-            if ( deletedFromFirestore ){
-                dao.deleteRental(rental.id)
-                ServiceResponse.Success(Unit)
+            val tenantsExist = checkTenantsInRental(rental.id)
+            if ( tenantsExist ) {
+                ServiceResponse.Error(R.string.tenants_exist_error)
             } else {
                 dao.upsertRental(rental.copy(isDeleted = true).toEntity())
-                ServiceResponse.Success(Unit)
+                firestore.runTransaction {
+                    val document = it.get(firestore.collection(Collections.LANDLORDS)
+                        .document(firebaseAuth.uid!!)
+                        .collection(Collections.RENTALS)
+                        .document(rental.id))
+
+                    if ( document.exists() ) {
+                        it.delete(document.reference)
+                        deletedFromFirestore = true
+                    }
+                }.await()
+                if ( deletedFromFirestore ){
+                    dao.deleteRental(rental.id)
+                    ServiceResponse.Success(Unit)
+                } else {
+                    ServiceResponse.Success(Unit)
+                }
             }
         } catch(e: Exception) {
             Log.e(TAG, "$e.message")
             if ( e is FirebaseFirestoreException || e is FirebaseNetworkException) {
                 Log.v(TAG, "Not deleted from remote!!")
-                dao.upsertRental(rental.toEntity().copy(isDeleted = true))
                 ServiceResponse.Success(Unit)
             } else {
                 ServiceResponse.Error(R.string.unknown_error)

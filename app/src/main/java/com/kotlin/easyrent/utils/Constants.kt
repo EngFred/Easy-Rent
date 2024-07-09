@@ -10,8 +10,10 @@ object Constants {
 object Collections {
     const val LANDLORDS = "landlords"
     const val RENTALS = "rentals"
+    const val TENANTS = "tenants"
 }
 
 object Keys {
     const val RENTAL_ID = "rentalId"
+    const val TENANT_ID = "tenantId"
 }

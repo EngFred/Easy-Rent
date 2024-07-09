@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.kotlin.easyrent.core.cache.CacheDatabase
 import com.kotlin.easyrent.features.auth.data.repository.AuthRepositoryImpl
 import com.kotlin.easyrent.features.auth.domain.repository.AuthRepository
 import com.kotlin.easyrent.features.auth.domain.usecase.ValidateConfirmPasswordUseCase
@@ -13,9 +14,10 @@ import com.kotlin.easyrent.features.auth.domain.usecase.ValidatePasswordUseCase
 import com.kotlin.easyrent.features.auth.domain.usecase.ValidatePhoneNumberUseCase
 import com.kotlin.easyrent.features.profile.data.repository.ProfileRepositoryImpl
 import com.kotlin.easyrent.features.profile.domain.repository.ProfileRepository
-import com.kotlin.easyrent.features.rentalManagement.data.cache.CacheDatabase
 import com.kotlin.easyrent.features.rentalManagement.data.repository.RentalsRepositoryImpl
 import com.kotlin.easyrent.features.rentalManagement.domain.repository.RentalsRepository
+import com.kotlin.easyrent.features.tenantManagement.data.repository.TenantsRepositoryImpl
+import com.kotlin.easyrent.features.tenantManagement.domain.repository.TenantsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,6 +61,20 @@ object RepositoryModule {
         firebaseStorage,
         cacheDatabase,
         context
+    )
+
+    @Provides
+    @Singleton
+    fun providesTenantsRepository(
+        firebaseAuth: FirebaseAuth,
+        firestore: FirebaseFirestore,
+        firebaseStorage: FirebaseStorage,
+        cacheDatabase: CacheDatabase
+    ) : TenantsRepository = TenantsRepositoryImpl(
+        firebaseAuth,
+        firestore,
+        firebaseStorage,
+        cacheDatabase
     )
 
     @Provides

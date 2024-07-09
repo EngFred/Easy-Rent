@@ -1,7 +1,6 @@
-package com.kotlin.easyrent.features.rentalManagement.ui.screens.rentals
+package com.kotlin.easyrent.features.tenantManagement.ui.screens.tenants
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,8 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,34 +27,23 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kotlin.easyrent.core.theme.myPrimary
 import com.kotlin.easyrent.core.theme.poppins
-import com.kotlin.easyrent.features.rentalManagement.ui.components.RentalsList
-import com.kotlin.easyrent.features.rentalManagement.ui.viewModel.RentalsViewModel
+import com.kotlin.easyrent.features.tenantManagement.ui.components.TenantsList
+import com.kotlin.easyrent.features.tenantManagement.ui.viewModel.TenantsViewModel
 
 @Composable
-fun RentalsScreen(
+fun TenantsScreen(
     modifier: Modifier = Modifier,
-    onAddRental: () -> Unit,
-    onUpdateRental: (String) -> Unit,
-    rentalsViewModel: RentalsViewModel = hiltViewModel()
+    onAddTenant: () -> Unit,
+    onUpdateTenant: (String) -> Unit,
+    tenantsViewModel: TenantsViewModel = hiltViewModel(),
 ) {
 
-    val uiState = rentalsViewModel.uiState.collectAsState().value
+    val uiState = tenantsViewModel.uiState.collectAsState().value
     val context = LocalContext.current
 
-    LaunchedEffect(uiState.rentalDeleteError) {
-        if ( uiState.rentalDeleteError != null ) {
-            Toast.makeText(context, uiState.rentalDeleteError, Toast.LENGTH_LONG).show()
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            rentalsViewModel.resetErrorState()
-        }
-    }
 
     when {
-        uiState.isLoading || uiState.loadError != null  -> {
+        uiState.isLoading || uiState.error != null  -> {
             Box(
                 modifier = modifier
                     .fillMaxSize()
@@ -70,9 +56,9 @@ fun RentalsScreen(
                         color = myPrimary
                     )
                 }
-                if ( uiState.loadError != null ) {
+                if ( uiState.error != null ) {
                     Text(
-                        text = stringResource(uiState.loadError),
+                        text = stringResource(uiState.error),
                         fontFamily = poppins,
                         fontSize = 16.sp,
                         textAlign = TextAlign.Center,
@@ -82,15 +68,13 @@ fun RentalsScreen(
             }
         }
         else -> {
-            val rentals = uiState.rentals
+            val tenants = uiState.tenants
             Scaffold(
                 modifier = modifier,
                 floatingActionButton = {
                     FloatingActionButton(
                         onClick = {
-                            if (!uiState.deletingRental){
-                                onAddRental()
-                            }
+                            onAddTenant()
                         },
                         shape = CircleShape,
                         containerColor = myPrimary,
@@ -101,7 +85,7 @@ fun RentalsScreen(
                 }
             ) { paddingValues ->
                 Log.v("TAG", "$paddingValues")
-                if (rentals.isEmpty()) {
+                if (tenants.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -109,7 +93,7 @@ fun RentalsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "There are no rentals added yet! click on the button below to add a rental",
+                            text = "There are no tenants added yet! click on the button below to add a tenant",
                             fontFamily = poppins,
                             fontSize = 16.sp,
                             textAlign = TextAlign.Center,
@@ -117,26 +101,15 @@ fun RentalsScreen(
                         )
                     }
                 } else {
-                    RentalsList(
+                    TenantsList(
                         modifier = Modifier,
-                        rentals = rentals,
+                        tenants = tenants,
                         onClick = {
-                            if (!uiState.deletingRental) {
-                                onUpdateRental(it)
-                            }
-                        },
-                        onDelete = {
-                            if (!uiState.deletingRental) {
-                                rentalsViewModel.onEvent(RentalsUiEvents.RentalDeleted(it))
-                            }
-                        },
-                        isDeleting = { uiState.deletingRental },
-                        deletedRentalId = uiState.deletedRentalId
+                            onUpdateTenant(it)
+                        }
                     )
                 }
             }
         }
     }
 }
-
-

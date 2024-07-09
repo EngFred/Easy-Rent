@@ -14,10 +14,10 @@ interface RentalsDao {
     @Query("SELECT * FROM rentals WHERE id = :rentalId")
     fun getRentalById(rentalId: String): Flow<RentalEntity?>
 
-    @Query("SELECT * FROM rentals WHERE isDeleted = 0")
+    @Query("SELECT * FROM rentals WHERE isDeleted = 0 ORDER BY id ASC")
     fun getAllRentals(): Flow<List<RentalEntity>>
 
-    @Query("SELECT * FROM rentals WHERE isDeleted = 1")
+    @Query("SELECT * FROM rentals WHERE isDeleted = 1 AND isSynced = 0")
     fun getAllDeletedRentals(): Flow<List<RentalEntity>>
 
     @Query("DELETE FROM rentals WHERE id = :rentalId")

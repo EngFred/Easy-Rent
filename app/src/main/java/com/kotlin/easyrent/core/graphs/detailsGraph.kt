@@ -14,7 +14,8 @@ import com.kotlin.easyrent.features.expenseTracking.ui.screens.ExpensesScreen
 import com.kotlin.easyrent.features.paymentTracking.ui.screens.PaymentsScreen
 import com.kotlin.easyrent.features.rentalManagement.ui.screens.rentals.RentalsScreen
 import com.kotlin.easyrent.features.rentalManagement.ui.screens.upsert.UpsertRentalsScreen
-import com.kotlin.easyrent.features.tenantManagement.ui.screens.TenantsScreen
+import com.kotlin.easyrent.features.tenantManagement.ui.screens.tenants.TenantsScreen
+import com.kotlin.easyrent.features.tenantManagement.ui.screens.upsert.UpsertTenantScreen
 import com.kotlin.easyrent.utils.Keys
 
 fun NavGraphBuilder.detailGraph(
@@ -30,7 +31,23 @@ fun NavGraphBuilder.detailGraph(
         composable(
             route = HomeRoutes.Tenants.destination
         ) {
-            TenantsScreen()
+            TenantsScreen(
+                modifier = modifier,
+                onAddTenant = {
+                    navController.navigate(
+                        HomeRoutes.TenantUpsert.destination
+                    ) {
+                        launchSingleTop = true
+                    }
+                },
+                onUpdateTenant = { tenantId ->
+                    navController.navigate(
+                        "${HomeRoutes.TenantUpsert.destination}?$tenantId"
+                    ) {
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
 
         composable(
@@ -58,7 +75,7 @@ fun NavGraphBuilder.detailGraph(
             UpsertRentalsScreen(
                 modifier = modifier,
                 rentalId = rentalId,
-                onUpsertSuccess = {
+                onTaskSuccess = {
                     navController.popBackStack()
                 }
             )
@@ -78,6 +95,26 @@ fun NavGraphBuilder.detailGraph(
                     navController.navigate(
                         "${HomeRoutes.RentalUpsert.destination}?$rentalId"
                     )
+                }
+            )
+        }
+
+
+        composable(
+            route = "${HomeRoutes.TenantUpsert.destination}?{${Keys.TENANT_ID}}",
+            arguments = listOf(
+                navArgument(Keys.TENANT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { navBackStackEntry ->
+            val tenantId = navBackStackEntry.arguments?.getString(Keys.TENANT_ID)
+            UpsertTenantScreen(
+                modifier = modifier,
+                tenantId = tenantId,
+                onTaskSuccess = {
+                    navController.popBackStack()
                 }
             )
         }

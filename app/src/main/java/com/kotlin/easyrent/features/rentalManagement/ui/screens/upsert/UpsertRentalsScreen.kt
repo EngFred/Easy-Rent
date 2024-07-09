@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,8 +28,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
@@ -59,7 +63,7 @@ import com.kotlin.easyrent.utils.openGallery
 fun UpsertRentalsScreen(
     modifier: Modifier = Modifier,
     rentalId: String?,
-    onUpsertSuccess: () -> Unit,
+    onTaskSuccess: () -> Unit,
     upsertRentalViewModel: UpsertRentalViewModel = hiltViewModel()
 ) {
 
@@ -76,9 +80,21 @@ fun UpsertRentalsScreen(
         }
     }
 
-    LaunchedEffect(uiState.upsertSuccessful) {
-        if ( uiState.upsertSuccessful ) {
-            onUpsertSuccess()
+    LaunchedEffect(uiState.deleteRentalError) {
+        if ( uiState.deleteRentalError != null ) {
+            Toast.makeText(context, uiState.deleteRentalError, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(uiState.taskSuccessfull) {
+        if ( uiState.taskSuccessfull ) {
+            onTaskSuccess()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            upsertRentalViewModel.resetErrorState()
         }
     }
 
@@ -189,7 +205,7 @@ fun UpsertRentalsScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(280.dp)
+                .height(255.dp)
                 .padding(horizontal = 7.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(myBackground),
@@ -201,7 +217,7 @@ fun UpsertRentalsScreen(
                 contentScale = ContentScale.Crop
             )
             IconButton(onClick = {
-                if ( !uiState.upserting ) {
+                if ( !uiState.upserting && !uiState.deletingRental ) {
                     upsertRentalViewModel.onEvent(UpsertRentalUiEvents.ShowPhotoOptionsDialogToggled)
                 }
             }, modifier = Modifier.align(Alignment.Center)
@@ -272,21 +288,43 @@ fun UpsertRentalsScreen(
                 onTextChange = {
                     upsertRentalViewModel.onEvent(UpsertRentalUiEvents.DescriptionChanged(it))
                 },
-                value = {uiState.description ?: ""},
-                keyboardType = KeyboardType.Number
+                value = { uiState.description ?: "" }
             )
-            Spacer(modifier = Modifier.size(20.dp))
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             MyButton(
-                modifier = Modifier.padding(50.dp),
+                modifier = Modifier.weight(1f),
                 text = if (rentalId == null) "Add Rental" else "Update Rental",
                 onClick = {
-                    if ( !uiState.upserting ) {
+                    if ( !uiState.upserting && !uiState.deletingRental ) {
                         upsertRentalViewModel.onEvent(UpsertRentalUiEvents.AddedRental)
                     }
                 },
-                enabled = uiState.isFormValid,
+                enabled = uiState.isFormValid && !uiState.deletingRental,
                 isLoading = { uiState.upserting }
             )
+            if ( rentalId != null ) {
+                Spacer(modifier = Modifier.width(14.dp))
+                MyButton(
+                    modifier = Modifier.weight(1f),
+                    text = "Delete Rental",
+                    onClick = {
+                        if ( !uiState.upserting && !uiState.deletingRental ) {
+                            upsertRentalViewModel.onEvent(UpsertRentalUiEvents.DeletedRental)
+                        }
+                    },
+                    backgroundColor = MaterialTheme.colorScheme.error,
+                    enabled = uiState.oldRental != null,
+                    isLoading = { uiState.deletingRental }
+                )
+            }
         }
     }
 
