@@ -218,7 +218,7 @@ class RentalsRepositoryImpl @Inject constructor(
 
     override suspend fun getAllDeletedRentals(): ServiceResponse<List<Rental>> {
         return try {
-            val rentals = dao.getAllDeletedRentals().first()
+            val rentals = dao.getAllDeletedRentals()
             ServiceResponse.Success(rentals.map { it.toDomain() })
         }catch(e: Exception) {
             Log.e(TAG, "${e.message}")
@@ -228,7 +228,7 @@ class RentalsRepositoryImpl @Inject constructor(
 
     override suspend fun getAllUnsyncedRentals(): ServiceResponse<List<Rental>> {
         return try {
-            val rentals = dao.getAllUnsyncedRentals().first()
+            val rentals = dao.getAllUnsyncedRentals()
             ServiceResponse.Success(rentals.map { it.toDomain() })
         }catch(e: Exception) {
             Log.e(TAG, "${e.message}")

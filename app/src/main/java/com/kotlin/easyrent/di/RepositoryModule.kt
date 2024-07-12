@@ -12,6 +12,8 @@ import com.kotlin.easyrent.features.auth.domain.usecase.ValidateEmailUseCase
 import com.kotlin.easyrent.features.auth.domain.usecase.ValidateNameUseCase
 import com.kotlin.easyrent.features.auth.domain.usecase.ValidatePasswordUseCase
 import com.kotlin.easyrent.features.auth.domain.usecase.ValidatePhoneNumberUseCase
+import com.kotlin.easyrent.features.paymentTracking.data.repository.PaymentsRepositoryImpl
+import com.kotlin.easyrent.features.paymentTracking.domain.repository.PaymentRepository
 import com.kotlin.easyrent.features.profile.data.repository.ProfileRepositoryImpl
 import com.kotlin.easyrent.features.profile.domain.repository.ProfileRepository
 import com.kotlin.easyrent.features.rentalManagement.data.repository.RentalsRepositoryImpl
@@ -74,6 +76,18 @@ object RepositoryModule {
         firebaseAuth,
         firestore,
         firebaseStorage,
+        cacheDatabase
+    )
+
+    @Provides
+    @Singleton
+    fun providesPaymentRepository(
+        firebaseAuth: FirebaseAuth,
+        firestore: FirebaseFirestore,
+        cacheDatabase: CacheDatabase
+    ) : PaymentRepository = PaymentsRepositoryImpl(
+        firebaseAuth,
+        firestore,
         cacheDatabase
     )
 

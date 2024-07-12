@@ -48,6 +48,7 @@ data class UpsertTenantUiState(
 
     val tenantStatus: TenantStatus = TenantStatus.New,
     val oldTenant: Tenant? = null,
+    val oldTenantRentalId:String? = null,
     val madeChanges: Boolean = false,
 
     )

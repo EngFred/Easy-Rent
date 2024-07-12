@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,13 +29,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,7 +42,7 @@ import com.kotlin.easyrent.core.theme.myPrimary
 import com.kotlin.easyrent.core.theme.poppins
 import com.kotlin.easyrent.core.theme.poppinsBold
 import com.kotlin.easyrent.features.tenantManagement.ui.viewModel.UpsertTenantViewModel
-import com.kotlin.easyrent.utils.calculateDaysInRental
+import com.kotlin.easyrent.utils.calculateTimeInRental
 import com.kotlin.easyrent.utils.formatCurrency
 
 @Composable
@@ -94,23 +92,63 @@ fun UpsertTenantScreen(
     ) {
 
         if( tenantId != null ) {
-            uiState.moveInDate?.let {
-                val daysInRental = calculateDaysInRental(it)
-                val pluralizeDays = if (daysInRental == 0L) "day" else "days"
-                Text(text = buildAnnotatedString {
-                    withStyle(
-                        style = SpanStyle(fontSize = 60.sp, fontFamily = poppinsBold)
-                    ) {
-                        append("${daysInRental+1L}")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                uiState.moveInDate?.let {
+                    val timeInRentals = calculateTimeInRental(it)
+                    Column (
+                        modifier = Modifier.padding(start = 12.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        Text(
+                            text = "Time in",
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            fontFamily = poppins,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = timeInRentals,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            fontFamily = poppins,
+                            fontWeight = FontWeight.ExtraBold
+                        )
                     }
-                    withStyle(
-                        style = SpanStyle(fontFamily = poppins, fontWeight = FontWeight.ExtraBold)
-                    ) {
-                        append(" $pluralizeDays in")
-                    }
-                }, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+
+                }
+                Spacer(modifier = Modifier.size(13.dp))
+
+                Column(
+                    modifier = Modifier.padding(end = 12.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Due Months",
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        fontFamily = poppins,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        text = uiState.oldTenant?.unpaidMonths.toString(),
+                        textAlign = TextAlign.Center,
+                        fontSize = 14.sp,
+                        fontFamily = poppins,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
             }
+            Spacer(modifier = Modifier.size(13.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.size(13.dp))
         }
+
 
         MyTextField(
             label = "Name",
@@ -231,7 +269,9 @@ fun UpsertTenantScreen(
         }
         Spacer(modifier = Modifier.weight(1f))
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

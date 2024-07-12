@@ -17,12 +17,12 @@ interface RentalsDao {
     @Query("SELECT * FROM rentals WHERE isDeleted = 0 ORDER BY id ASC")
     fun getAllRentals(): Flow<List<RentalEntity>>
 
-    @Query("SELECT * FROM rentals WHERE isDeleted = 1 AND isSynced = 0")
-    fun getAllDeletedRentals(): Flow<List<RentalEntity>>
+    @Query("SELECT * FROM rentals WHERE isDeleted = 1")
+    suspend fun getAllDeletedRentals(): List<RentalEntity>
 
     @Query("DELETE FROM rentals WHERE id = :rentalId")
     suspend fun deleteRental(rentalId: String)
 
-    @Query("SELECT * FROM rentals WHERE isSynced = 0 AND isDeleted = 0")
-    fun getAllUnsyncedRentals(): Flow<List<RentalEntity>>
+    @Query("SELECT * FROM rentals WHERE isSynced = 0")
+    suspend fun getAllUnsyncedRentals(): List<RentalEntity>
 }

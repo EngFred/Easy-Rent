@@ -12,6 +12,7 @@ class UpsertTenantUseCase @Inject constructor(
     suspend operator fun invoke(
         tenant: Tenant,
         rental: Rental,
-        tenantStatus: TenantStatus
-    ) = tenantsRepository.upsertTenant(tenant, rental, tenantStatus)
+        tenantStatus: TenantStatus,
+        oldRentalId: String
+    ) = tenantsRepository.upsertTenant(tenant, rental, tenantStatus, oldRentalId)
 }

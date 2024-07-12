@@ -18,6 +18,7 @@ import com.kotlin.easyrent.features.tenantManagement.ui.screens.upsert.UpsertTen
 import com.kotlin.easyrent.features.tenantManagement.ui.screens.upsert.UpsertTenantUiState
 import com.kotlin.easyrent.utils.Keys
 import com.kotlin.easyrent.utils.ServiceResponse
+import com.kotlin.easyrent.utils.getCurrentMonthAndYear
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,7 +77,7 @@ class UpsertTenantViewModel @Inject constructor(
         when(event) {
             UpsertTenantUiEvents.AddedTenant -> {
                 _uiState.value.selectedRental?.let {
-                    upsertTenant(it, _uiState.value.tenantStatus)
+                    upsertTenant(it, _uiState.value.tenantStatus, _uiState.value.oldTenantRentalId ?: "")
                 }
             }
             is UpsertTenantUiEvents.AddressChanged -> {
@@ -159,7 +160,7 @@ class UpsertTenantViewModel @Inject constructor(
         validateForm()
     }
 
-    private fun upsertTenant(rental:  Rental, tenantStatus: TenantStatus) = viewModelScope.launch(Dispatchers.IO) {
+    private fun upsertTenant(rental:  Rental, tenantStatus: TenantStatus, oldRentalId: String) = viewModelScope.launch(Dispatchers.IO) {
         val tenant = Tenant(
             id = _uiState.value.tenantId ?: UUID.randomUUID().toString(),
             name = _uiState.value.name!!.trim(),
@@ -168,6 +169,8 @@ class UpsertTenantViewModel @Inject constructor(
             address = _uiState.value.address?.trim(),
             rentalName = _uiState.value.rentalName!!,
             moveInDate = _uiState.value.moveInDate ?: Date().time,
+            month = getCurrentMonthAndYear().first,
+            year = getCurrentMonthAndYear().second,
             rentalId = _uiState.value.rentalId!!,
             profilePhotoUrl = _uiState.value.imageUrl,
             description = _uiState.value.description?.trim(),
@@ -191,7 +194,7 @@ class UpsertTenantViewModel @Inject constructor(
                 )
             }
 
-            val res = upsertTenantUseCase.invoke(tenant, rental, tenantStatus)
+            val res = upsertTenantUseCase.invoke(tenant, rental, tenantStatus, oldRentalId)
             Log.v("TAG", "Task done!")
             when(res) {
                 is ServiceResponse.Error -> {
@@ -251,7 +254,8 @@ class UpsertTenantViewModel @Inject constructor(
                         imageUrl = res.data?.profilePhotoUrl,
                         description = res.data?.description,
                         balance = res.data?.balance?.toString(),
-                        oldTenant = res.data
+                        oldTenant = res.data,
+                        oldTenantRentalId = res.data?.rentalId
                     )
                 }
             }

@@ -25,10 +25,15 @@ import java.io.File
 import java.io.FileOutputStream
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 fun setLocale(context: Context, language: Language) {
     try {
@@ -46,7 +51,6 @@ fun setLocale(context: Context, language: Language) {
     } catch (e: Exception){
         Log.e("$", e.message.toString())
     }
-
 }
 
 fun restartApplication(context: Context) {
@@ -165,13 +169,73 @@ suspend fun compressImage(context: Context, imageUri: Uri, maxWidth: Int, maxHei
 }
 
 fun formatCurrency(amount: Double): String {
-    val numberFormat = NumberFormat.getNumberInstance(Locale.US)
-    val formattedAmount = numberFormat.format(amount)
-    return "UGX.$formattedAmount"
+    try {
+        val numberFormat = NumberFormat.getNumberInstance(Locale.US)
+        val formattedAmount = numberFormat.format(amount)
+        return "UGX.$formattedAmount"
+    } catch (e: NumberFormatException) {
+        return "UGX.$amount"
+    }
 }
 
-fun calculateDaysInRental(moveInDate: Long): Long {
-    val currentDate = Date().time
-    val diffInMillis = currentDate - moveInDate
-    return TimeUnit.MILLISECONDS.toDays(diffInMillis)
+//fun calculateDaysInRental(moveInDate: Long): Long {
+//    val currentDate = Date().time
+//    val diffInMillis = currentDate - moveInDate
+//    return TimeUnit.MILLISECONDS.toDays(diffInMillis)
+//}
+
+fun calculateTimeInRental(moveInDate: Long): String {
+    val moveInLocalDate = Date(moveInDate).toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+    val currentDate = LocalDate.now()
+
+    val years = ChronoUnit.YEARS.between(moveInLocalDate, currentDate)
+    val months = ChronoUnit.MONTHS.between(moveInLocalDate.plusYears(years), currentDate)
+    val days = ChronoUnit.DAYS.between(moveInLocalDate.plusYears(years).plusMonths(months), currentDate)
+
+    return when {
+        years > 0 -> "$years years"
+        months > 0 -> "$months months, $days days"
+        else -> "$days days"
+    }
+}
+
+fun getCurrentMonthDays(): Pair<String, Int> {
+    val currentDate = LocalDate.now()
+    val yearMonth = YearMonth.of(currentDate.year, currentDate.month)
+    val daysInMonth = yearMonth.lengthOfMonth()
+    val monthName = currentDate.month.name.lowercase()
+
+    return Pair(monthName, daysInMonth)
+}
+
+fun getCurrentMonthAndYear(): Pair<String, Int> {
+    val currentDate = LocalDate.now()
+    val monthName = currentDate.month.name.lowercase()
+    val year = currentDate.year
+
+    return Pair(monthName, year)
+}
+
+fun getDayWithSuffix(day: Int): String {
+    return when {
+        day in 11..13 -> "${day}th"
+        day % 10 == 1 -> "${day}st"
+        day % 10 == 2 -> "${day}nd"
+        day % 10 == 3 -> "${day}rd"
+        else -> "${day}th"
+    }
+}
+
+
+fun formatTimestampWithSuffix(timestamp: Long): String {
+    val instant = Instant.ofEpochMilli(timestamp)
+    val zonedDateTime = instant.atZone(ZoneId.systemDefault())
+    val dayWithSuffix = getDayWithSuffix(zonedDateTime.dayOfMonth)
+    val month = zonedDateTime.month.name.lowercase()
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+    val year = zonedDateTime.year
+    val timeFormatter = DateTimeFormatter.ofPattern("hh:mma")
+    val time = zonedDateTime.format(timeFormatter).replace("AM", "am").replace("PM", "pm")
+
+    return "$dayWithSuffix/$month/$year at $time"
 }

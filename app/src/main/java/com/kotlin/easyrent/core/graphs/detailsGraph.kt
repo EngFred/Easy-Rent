@@ -11,7 +11,8 @@ import com.kotlin.easyrent.core.presentation.SharedViewModel
 import com.kotlin.easyrent.core.routes.Graphs
 import com.kotlin.easyrent.core.routes.HomeRoutes
 import com.kotlin.easyrent.features.expenseTracking.ui.screens.ExpensesScreen
-import com.kotlin.easyrent.features.paymentTracking.ui.screens.PaymentsScreen
+import com.kotlin.easyrent.features.paymentTracking.ui.screens.payments.PaymentsScreen
+import com.kotlin.easyrent.features.paymentTracking.ui.screens.upsert.PaymentUpsertScreen
 import com.kotlin.easyrent.features.rentalManagement.ui.screens.rentals.RentalsScreen
 import com.kotlin.easyrent.features.rentalManagement.ui.screens.upsert.UpsertRentalsScreen
 import com.kotlin.easyrent.features.tenantManagement.ui.screens.tenants.TenantsScreen
@@ -59,7 +60,23 @@ fun NavGraphBuilder.detailGraph(
         composable(
             route = HomeRoutes.Payments.destination
         ) {
-           PaymentsScreen()
+           PaymentsScreen(
+               modifier = modifier,
+               onAddPayment = {
+                   navController.navigate(
+                       HomeRoutes.PaymentUpsert.destination
+                   ) {
+                       launchSingleTop = true
+                   }
+               },
+               onUpsertPayment = { paymentId ->
+                   navController.navigate(
+                       "${HomeRoutes.PaymentUpsert.destination}?$paymentId"
+                   ) {
+                       launchSingleTop = true
+                   }
+               }
+           )
         }
 
         composable(
@@ -113,6 +130,25 @@ fun NavGraphBuilder.detailGraph(
             UpsertTenantScreen(
                 modifier = modifier,
                 tenantId = tenantId,
+                onTaskSuccess = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = "${HomeRoutes.PaymentUpsert.destination}?{${Keys.PAYMENT_ID}}",
+            arguments = listOf(
+                navArgument(Keys.PAYMENT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { navBackStackEntry ->
+            val paymentId = navBackStackEntry.arguments?.getString(Keys.PAYMENT_ID)
+            PaymentUpsertScreen(
+                modifier = modifier,
+                paymentId = paymentId,
                 onTaskSuccess = {
                     navController.popBackStack()
                 }

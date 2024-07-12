@@ -11,9 +11,11 @@ object Collections {
     const val LANDLORDS = "landlords"
     const val RENTALS = "rentals"
     const val TENANTS = "tenants"
+    const val PAYMENTS = "payments"
 }
 
 object Keys {
     const val RENTAL_ID = "rentalId"
     const val TENANT_ID = "tenantId"
+    const val PAYMENT_ID = "paymentId"
 }

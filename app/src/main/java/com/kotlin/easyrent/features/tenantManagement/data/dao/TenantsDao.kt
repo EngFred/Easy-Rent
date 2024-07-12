@@ -11,11 +11,11 @@ interface TenantsDao {
     @Query("SELECT * FROM tenants WHERE isDeleted = 0 ORDER BY id ASC")
     fun getAllTenants(): Flow<List<TenantEntity>>
 
-    @Query("SELECT * FROM tenants WHERE isSynced = 0 AND isDeleted = 0")
-    fun getAllUnsyncedTenants(): Flow<List<TenantEntity>>
+    @Query("SELECT * FROM tenants WHERE isSynced = 0")
+    suspend fun getAllUnsyncedTenants(): List<TenantEntity>
 
-    @Query("SELECT * FROM tenants WHERE isDeleted = 1 AND isSynced = 0")
-    fun getAllDeletedTenants(): Flow<List<TenantEntity>>
+    @Query("SELECT * FROM tenants WHERE isDeleted = 1")
+    suspend fun getAllDeletedTenants(): List<TenantEntity>
 
     @Query("SELECT * FROM tenants WHERE id = :id")
     suspend fun getTenantById(id: String): TenantEntity?

@@ -8,6 +8,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.storage.FirebaseStorage
 import com.kotlin.easyrent.R
 import com.kotlin.easyrent.core.cache.CacheDatabase
+import com.kotlin.easyrent.features.rentalManagement.data.mapper.toDomain
 import com.kotlin.easyrent.features.rentalManagement.data.mapper.toEntity
 import com.kotlin.easyrent.features.rentalManagement.domain.modal.Rental
 import com.kotlin.easyrent.features.tenantManagement.data.mapper.toDomain
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -40,46 +42,96 @@ class TenantsRepositoryImpl @Inject constructor(
     private val tenantsDao = cacheDatabase.tenantsDao()
     private val rentalsDao = cacheDatabase.rentalsDao()
 
-    override suspend fun upsertTenant(tenant: Tenant, rental: Rental, tenantStatus: TenantStatus): ServiceResponse<Unit> {
+    override suspend fun upsertTenant(
+        tenant: Tenant,
+        rental: Rental,
+        tenantStatus: TenantStatus,
+        oldRentalId: String
+    ): ServiceResponse<Unit> {
         return try {
             var rentalUpdatedInFirestore = false
-            tenantsDao.upsertTenant(tenant.toEntity())
-            val updatedRental = if(tenantStatus == TenantStatus.New) {
+            var newUpdatedRental = rental
+            var oldUpdatedRental: Rental? = null
+            if(tenantStatus == TenantStatus.New) {
                 Log.v(TAG, "Tenant just moved in...")
-                rental.copy(noOfRooms = (rental.noOfRooms-1), isSynced = false)
+                tenantsDao.upsertTenant(tenant.toEntity())
+                newUpdatedRental = rental.copy(noOfRooms = (rental.noOfRooms-1), isSynced = false)
             } else {
                 Log.v(TAG, "Tenant already moved in")
-                rental
+                if ( oldRentalId != rental.id ) {
+                    //changed rental
+                    val oldRental = rentalsDao.getRentalById(oldRentalId).first()
+                    if ( oldRental != null ) {
+                        Log.v(TAG, "The rental for the tenant has been changed...")
+                        oldUpdatedRental = oldRental.copy(noOfRooms = (oldRental.noOfRooms+1), isSynced = false).toDomain()
+                        rentalsDao.upsertRental(oldUpdatedRental.toEntity())
+                        newUpdatedRental = rental.copy(noOfRooms = (rental.noOfRooms-1), isSynced = false)
+                    }
+                }
             }
-            rentalsDao.upsertRental(updatedRental.toEntity())
+            rentalsDao.upsertRental(newUpdatedRental.toEntity())
             firestore.runTransaction {
+
                 val tenantDocument = it.get(firestore.collection(Collections.LANDLORDS)
                     .document(firebaseAuth.uid!!)
                     .collection(Collections.TENANTS)
                     .document(tenant.id))
-                val rentalsDocument = it.get(firestore.collection(Collections.LANDLORDS)
-                    .document(firebaseAuth.uid!!)
-                    .collection(Collections.RENTALS)
-                    .document(rental.id))
+
+                if ( oldUpdatedRental != null ) {
+                    val newRentalsDocument = it.get(firestore.collection(Collections.LANDLORDS)
+                        .document(firebaseAuth.uid!!)
+                        .collection(Collections.RENTALS)
+                        .document(newUpdatedRental.id))
+
+                    val oldRentalDocument = it.get(firestore.collection(Collections.LANDLORDS)
+                        .document(firebaseAuth.uid!!)
+                        .collection(Collections.RENTALS)
+                        .document(oldUpdatedRental.id))
+
+                    if ( oldRentalDocument.exists() ) {
+                        it.update(
+                            oldRentalDocument.reference,
+                            "noOfRooms", oldUpdatedRental.noOfRooms
+                        )
+                    }
+
+                    if ( newRentalsDocument.exists() ) {
+                        if ( tenantStatus == TenantStatus.New ) {
+                            it.update(
+                                newRentalsDocument.reference,
+                                "noOfRooms", newUpdatedRental.noOfRooms
+                            )
+                            rentalUpdatedInFirestore = true
+                        }
+                    }
+                } else {
+
+                    val newRentalsDocument = it.get(firestore.collection(Collections.LANDLORDS)
+                        .document(firebaseAuth.uid!!)
+                        .collection(Collections.RENTALS)
+                        .document(newUpdatedRental.id))
+
+                    if ( newRentalsDocument.exists() ) {
+                        if ( tenantStatus == TenantStatus.New ) {
+                            it.update(
+                                newRentalsDocument.reference,
+                                "noOfRooms", newUpdatedRental.noOfRooms
+                            )
+                            rentalUpdatedInFirestore = true
+                        }
+                    }
+                }
 
                 it.set(
                     tenantDocument.reference,
                     tenant.copy(isSynced = true)
                 )
 
-                if ( rentalsDocument.exists() ) {
-                    if ( tenantStatus == TenantStatus.New ) {
-                        it.update(
-                            rentalsDocument.reference,
-                            "noOfRooms", updatedRental.noOfRooms
-                        )
-                        rentalUpdatedInFirestore = true
-                    }
-                }
             }.await()
             tenantsDao.upsertTenant(tenant.copy(isSynced = true).toEntity())
-            if ( rentalUpdatedInFirestore ) {
-                rentalsDao.upsertRental(updatedRental.copy(isSynced = true).toEntity())
+            rentalsDao.upsertRental(newUpdatedRental.copy(isSynced = true).toEntity())
+            if ( oldUpdatedRental != null ) {
+                rentalsDao.upsertRental(oldUpdatedRental.copy(isSynced = true).toEntity())
             }
             ServiceResponse.Success(Unit)
         }catch (e: Exception) {
@@ -167,27 +219,23 @@ class TenantsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getAllUnsyncedTenants(): Flow<ServiceResponse<List<Tenant>>> {
-        return channelFlow {
-            send(ServiceResponse.Idle)
-            tenantsDao.getAllUnsyncedTenants().collectLatest {
-                send(ServiceResponse.Success(it.map { it.toDomain() }))
-            }
-        }.catch{
-            Log.e(TAG, "${it.message}")
-            emit(ServiceResponse.Error(R.string.unknown_error))
-        }.flowOn(Dispatchers.IO)
+    override suspend fun getAllUnsyncedTenants(): ServiceResponse<List<Tenant>> {
+        return try {
+            val tenants = tenantsDao.getAllUnsyncedTenants()
+            ServiceResponse.Success(tenants.map { it.toDomain() })
+        }catch( e: Exception ){
+            Log.e(TAG, "${e.message}")
+            ServiceResponse.Error(R.string.unknown_error)
+        }
     }
 
-    override fun getAllDeletedTenants(): Flow<ServiceResponse<List<Tenant>>> {
-        return channelFlow {
-            send(ServiceResponse.Idle)
-            tenantsDao.getAllDeletedTenants().collectLatest {
-                send(ServiceResponse.Success(it.map { it.toDomain() }))
-            }
-        }.catch{
-            Log.e(TAG, "${it.message}")
-            emit(ServiceResponse.Error(R.string.unknown_error))
-        }.flowOn(Dispatchers.IO)
+    override suspend fun getAllDeletedTenants(): ServiceResponse<List<Tenant>> {
+        return try {
+            val tenants = tenantsDao.getAllDeletedTenants()
+            ServiceResponse.Success(tenants.map { it.toDomain() })
+        }catch( e: Exception ){
+            Log.e(TAG, "${e.message}")
+            ServiceResponse.Error(R.string.unknown_error)
+        }
     }
 }
