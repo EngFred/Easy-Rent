@@ -11,7 +11,7 @@ interface PaymentsDao {
     @Upsert
     suspend fun savePayment(paymentEntity: PaymentEntity)
 
-    @Query("SELECT * FROM payments")
+    @Query("SELECT * FROM payments WHERE isDeleted = 0")
     fun getAllPayments(): Flow<List<PaymentEntity>>
 
     @Query("SELECT * FROM payments WHERE rentalId = :rentalId")
@@ -37,4 +37,7 @@ interface PaymentsDao {
 
     @Query("SELECT * FROM payments WHERE isDeleted = 1")
     suspend fun getDeletedPayments(): List<PaymentEntity>
+
+    @Query("SELECT SUM(amount) FROM payments WHERE isDeleted = 0")
+    fun getTotalPayments(): Flow<Double>
 }

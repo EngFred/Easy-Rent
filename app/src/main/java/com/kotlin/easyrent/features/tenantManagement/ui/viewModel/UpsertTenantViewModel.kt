@@ -150,10 +150,19 @@ class UpsertTenantViewModel @Inject constructor(
                 if ( _uiState.value.oldTenant !=  null ) {
                     _uiState.update {
                         it.copy(
-                            deletingTenant = true
+                            deletingTenant = true,
+                            showConfirmDeleteDialog = false
                         )
                     }
                     deleteTenant(_uiState.value.oldTenant!!, _uiState.value.selectedRental!! )
+                }
+            }
+
+            UpsertTenantUiEvents.ShowConfirmDeleteDialog -> {
+                _uiState.update {
+                    it.copy(
+                        showConfirmDeleteDialog = !it.showConfirmDeleteDialog
+                    )
                 }
             }
         }
@@ -174,7 +183,7 @@ class UpsertTenantViewModel @Inject constructor(
             rentalId = _uiState.value.rentalId!!,
             profilePhotoUrl = _uiState.value.imageUrl,
             description = _uiState.value.description?.trim(),
-            balance = _uiState.value.balance!!.toDouble()
+            balance = _uiState.value.balance?.toDouble() ?: _uiState.value.selectedRental?.monthlyPayment ?: 0.0
         )
 
         _uiState.update {
@@ -258,6 +267,8 @@ class UpsertTenantViewModel @Inject constructor(
                         oldTenantRentalId = res.data?.rentalId
                     )
                 }
+
+                Log.d("%", "Tenant balance: ${_uiState.value.balance}")
             }
         }
     }
@@ -268,13 +279,12 @@ class UpsertTenantViewModel @Inject constructor(
                 is ServiceResponse.Error -> Unit
                 ServiceResponse.Idle -> Unit
                 is ServiceResponse.Success -> {
-                    Log.v("TAG", "Received ${res.data.size} rentals")
+                    Log.v("TAG", "Received ${res.data}")
                     if ( res.data.size == 1 ) {
                         _uiState.update {
                             it.copy(
                                 rentalName = res.data[0].name,
                                 rentalId = res.data[0].id,
-                                balance = res.data[0].monthlyPayment.toString(),
                                 rentals = res.data,
                                 selectedRental = res.data[0]
                             )
@@ -287,6 +297,7 @@ class UpsertTenantViewModel @Inject constructor(
                             )
                         }
                     }
+                    Log.v("TAG", "Selected Rental ${_uiState.value.selectedRental}")
                 }
             }
         }
@@ -299,12 +310,10 @@ class UpsertTenantViewModel @Inject constructor(
         val rentalNameValidationResults = !_uiState.value.rentalName.isNullOrEmpty()
         val emailValidationResults = if ( _uiState.value.email.isNullOrEmpty() ) true else _uiState.value.emailError == null
         val phoneValidationResults = !_uiState.value.phone.isNullOrEmpty() && _uiState.value.phoneError == null
-        val balanceValidationResults = !_uiState.value.balance.isNullOrEmpty()  && _uiState.value.balance != "0.00"
         val rooms = if ( _uiState.value.tenantStatus == TenantStatus.New ) _uiState.value.selectedRental?.noOfRooms != 0 else true
         val validationResults = nameValidationResults
                 && rentalNameValidationResults
                 && phoneValidationResults
-                && balanceValidationResults
                 && emailValidationResults
                 && rooms
 
@@ -312,7 +321,6 @@ class UpsertTenantViewModel @Inject constructor(
         Log.wtf("TAG", "nameValidationResults: $nameValidationResults")
         Log.wtf("TAG", "emailValidationResults: $emailValidationResults")
         Log.wtf("TAG", "phoneValidationResul: $phoneValidationResults")
-        Log.wtf("TAG", "balanceValidationResults: $balanceValidationResults")
         Log.wtf("TAG", "rooms: $rooms")
 
         _uiState.update {

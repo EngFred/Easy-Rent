@@ -27,7 +27,9 @@ fun HomeNavGraph(
         composable(
             route = HomeRoutes.Dashboard.destination
         ) {
-            DashboardScreen()
+            DashboardScreen(
+                modifier = modifier
+            )
         }
         composable(
             route = HomeRoutes.Profile.destination

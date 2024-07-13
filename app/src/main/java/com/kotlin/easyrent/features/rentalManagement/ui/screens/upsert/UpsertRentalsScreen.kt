@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.rounded.CameraEnhance
 import androidx.compose.material.icons.rounded.PhotoCameraBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,8 +43,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -55,7 +61,9 @@ import com.kotlin.easyrent.core.presentation.components.MyTextField
 import com.kotlin.easyrent.core.theme.myBackground
 import com.kotlin.easyrent.core.theme.poppins
 import com.kotlin.easyrent.core.theme.poppinsBold
+import com.kotlin.easyrent.features.rentalManagement.domain.modal.Rental
 import com.kotlin.easyrent.features.rentalManagement.ui.viewModel.UpsertRentalViewModel
+import com.kotlin.easyrent.utils.Constants
 import com.kotlin.easyrent.utils.getTempImageUri
 import com.kotlin.easyrent.utils.openGallery
 
@@ -96,6 +104,18 @@ fun UpsertRentalsScreen(
         onDispose {
             upsertRentalViewModel.resetErrorState()
         }
+    }
+
+    if (uiState.showConfirmDeleteDialog) {
+        ShowConfirmDeleteDialog(
+            onDismiss = {
+                 upsertRentalViewModel.onEvent(UpsertRentalUiEvents.ShowConfirmDeleteDialogToggled)
+            },
+            onDelete = {
+                upsertRentalViewModel.onEvent(UpsertRentalUiEvents.DeletedRental)
+            },
+            rental = uiState.oldRental
+        )
     }
 
     //launcher for getting image
@@ -211,7 +231,7 @@ fun UpsertRentalsScreen(
                 .background(myBackground),
         ) {
             AsyncImage(
-                model = uiState.imageUrl,
+                model = uiState.imageUrl ?: Constants.DEFAULT_RENTAL_IMAGE,
                 contentDescription = null,
                 imageLoader = ImageLoader(LocalContext.current),
                 contentScale = ContentScale.Crop
@@ -220,7 +240,10 @@ fun UpsertRentalsScreen(
                 if ( !uiState.upserting && !uiState.deletingRental ) {
                     upsertRentalViewModel.onEvent(UpsertRentalUiEvents.ShowPhotoOptionsDialogToggled)
                 }
-            }, modifier = Modifier.align(Alignment.Center)
+            }, modifier = Modifier
+                .align(Alignment.Center)
+                .clip(CircleShape)
+                .background(myBackground.copy(alpha = .5f))
             ) {
                 Icon(
                     imageVector = Icons.Rounded.PhotoCameraBack,
@@ -317,7 +340,7 @@ fun UpsertRentalsScreen(
                     text = "Delete Rental",
                     onClick = {
                         if ( !uiState.upserting && !uiState.deletingRental ) {
-                            upsertRentalViewModel.onEvent(UpsertRentalUiEvents.DeletedRental)
+                            upsertRentalViewModel.onEvent(UpsertRentalUiEvents.ShowConfirmDeleteDialogToggled)
                         }
                     },
                     backgroundColor = MaterialTheme.colorScheme.error,
@@ -387,6 +410,69 @@ fun ShowOptionsDialog(
         },
         confirmButton = {
 
+        }
+    )
+}
+
+@Composable
+fun ShowConfirmDeleteDialog(
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit,
+    rental: Rental?
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Confirm Action", fontFamily = poppinsBold)
+        },
+        text = {
+            Column {
+                Text(text = buildAnnotatedString {
+                    withStyle(
+                        style = SpanStyle(
+                            fontFamily = poppins,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    ) {
+                        append("You are about to completely the rental ")
+                    }
+                    withStyle(
+                        style = SpanStyle(
+                            fontFamily = poppinsBold,
+                        )
+                    ) {
+                        append(rental?.name?.replaceFirstChar { it.uppercase() })
+                    }
+                    withStyle(
+                        style = SpanStyle(
+                            fontFamily = poppins,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    ) {
+                        append("! Please note that this action can't be undone.")
+                    }
+                })
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDelete,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(7.dp)
+            ) {
+                Text(text = "Proceed", fontFamily = poppins, fontWeight = FontWeight.ExtraBold)
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(7.dp)
+            ) {
+                Text(text = "Cancel", fontFamily = poppins, fontWeight = FontWeight.ExtraBold)
+            }
         }
     )
 }

@@ -73,7 +73,11 @@ class PaymentsSyncWorker @AssistedInject constructor (
         payment: PaymentEntity,
         paymentsDao: PaymentsDao
     ) {
-        collectionRef.document(payment.id).delete().await()
+        firestore.runTransaction {
+            it.delete(
+                collectionRef.document(payment.id)
+            )
+        }.await()
         paymentsDao.deletePaymentById(payment.id)
     }
 
@@ -82,7 +86,12 @@ class PaymentsSyncWorker @AssistedInject constructor (
         payment: PaymentEntity,
         paymentsDao: PaymentsDao
     ) {
-        collection.document(payment.id).set(payment.copy(isSynced = true).toDomain()).await()
+        firestore.runTransaction {
+            it.set(
+                collection.document(payment.id),
+                payment.copy(isSynced = true).toDomain()
+            )
+        }.await()
         paymentsDao.savePayment(payment.copy(isSynced = true))
     }
 }

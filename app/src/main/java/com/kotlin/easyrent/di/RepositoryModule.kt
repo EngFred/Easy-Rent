@@ -12,6 +12,10 @@ import com.kotlin.easyrent.features.auth.domain.usecase.ValidateEmailUseCase
 import com.kotlin.easyrent.features.auth.domain.usecase.ValidateNameUseCase
 import com.kotlin.easyrent.features.auth.domain.usecase.ValidatePasswordUseCase
 import com.kotlin.easyrent.features.auth.domain.usecase.ValidatePhoneNumberUseCase
+import com.kotlin.easyrent.features.dashboard.data.repository.DashboardRepositoryImpl
+import com.kotlin.easyrent.features.dashboard.domain.repository.DashboardRepository
+import com.kotlin.easyrent.features.expenseTracking.data.repository.ExpensesRepositoryImpl
+import com.kotlin.easyrent.features.expenseTracking.domain.repository.ExpensesRepository
 import com.kotlin.easyrent.features.paymentTracking.data.repository.PaymentsRepositoryImpl
 import com.kotlin.easyrent.features.paymentTracking.domain.repository.PaymentRepository
 import com.kotlin.easyrent.features.profile.data.repository.ProfileRepositoryImpl
@@ -37,6 +41,12 @@ object RepositoryModule {
         firebaseAuth: FirebaseAuth,
         firestore: FirebaseFirestore
     ): AuthRepository = AuthRepositoryImpl(firebaseAuth, firestore)
+
+    @Provides
+    @Singleton
+    fun providesDashboardRepository(
+        cacheDatabase: CacheDatabase
+    ): DashboardRepository = DashboardRepositoryImpl(cacheDatabase)
 
 
 
@@ -89,6 +99,18 @@ object RepositoryModule {
         firebaseAuth,
         firestore,
         cacheDatabase
+    )
+
+    @Provides
+    @Singleton
+    fun providesExpensesRepository(
+        firebaseAuth: FirebaseAuth,
+        firestore: FirebaseFirestore,
+        cacheDatabase: CacheDatabase
+    ) : ExpensesRepository = ExpensesRepositoryImpl(
+        cacheDatabase,
+        firebaseAuth,
+        firestore
     )
 
     @Provides

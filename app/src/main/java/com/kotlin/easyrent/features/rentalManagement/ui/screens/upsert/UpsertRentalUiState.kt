@@ -42,4 +42,6 @@ data class UpsertRentalUiState(
     val oldRentalName: String? = null,
     val oldRental: Rental? = null,
     val madeChanges: Boolean = false,
+
+    val showConfirmDeleteDialog: Boolean = false,
 )

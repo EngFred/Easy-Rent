@@ -15,6 +15,7 @@ import coil.util.DebugLogger
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.kotlin.easyrent.core.cache.CacheDatabase
+import com.kotlin.easyrent.features.expenseTracking.data.worker.ExpensesSyncWorker
 import com.kotlin.easyrent.features.paymentTracking.data.worker.PaymentsSyncWorker
 import com.kotlin.easyrent.features.rentalManagement.data.worker.RentalsSyncWorker
 import com.kotlin.easyrent.features.tenantManagement.data.worker.DaysCalculationWorker
@@ -89,6 +90,13 @@ class EasyRentApplication : Application(),
                     firebaseAuth
                 )
                 DaysCalculationWorker::class.java.name -> return DaysCalculationWorker(
+                    appContext,
+                    workerParameters,
+                    cacheDatabase,
+                    firestore,
+                    firebaseAuth
+                )
+                ExpensesSyncWorker::class.java.name -> return ExpensesSyncWorker(
                     appContext,
                     workerParameters,
                     cacheDatabase,

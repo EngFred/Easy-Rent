@@ -32,6 +32,7 @@ import com.kotlin.easyrent.core.routes.Graphs
 import com.kotlin.easyrent.core.theme.EasyRentTheme
 import com.kotlin.easyrent.core.theme.SetSystemBarColor
 import com.kotlin.easyrent.core.theme.splashBg
+import com.kotlin.easyrent.features.expenseTracking.data.worker.ExpensesSyncWorker
 import com.kotlin.easyrent.features.paymentTracking.data.worker.PaymentsSyncWorker
 import com.kotlin.easyrent.features.rentalManagement.data.worker.RentalsSyncWorker
 import com.kotlin.easyrent.features.tenantManagement.data.worker.DaysCalculationWorker
@@ -137,6 +138,11 @@ class MainActivity : ComponentActivity() {
             flexTimeInterval = Duration.ofMinutes(7)
         ).setConstraints(workerConstraints).build()
 
+        val expensesSyncRequest = PeriodicWorkRequestBuilder<ExpensesSyncWorker>(
+            repeatInterval = Duration.ofMinutes(15),
+            flexTimeInterval = Duration.ofMinutes(7)
+        ).setConstraints(workerConstraints).build()
+
         //days in rental
         val daysInRentalSyncRequest = PeriodicWorkRequestBuilder<DaysCalculationWorker>(
             repeatInterval = Duration.ofHours(4),
@@ -162,6 +168,12 @@ class MainActivity : ComponentActivity() {
                     "tenants_sync",
                     ExistingPeriodicWorkPolicy.KEEP,
                     tenantsSyncRequest
+                )
+
+                enqueueUniquePeriodicWork(
+                    "expenses_sync",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    expensesSyncRequest
                 )
 
                 enqueueUniquePeriodicWork(

@@ -68,7 +68,11 @@ class TenantsSyncWorker @AssistedInject constructor (
         tenant: TenantEntity,
         tenantsDao: TenantsDao
     ) {
-        collectionRef.document(tenant.id).delete().await()
+        firestore.runTransaction {
+            it.delete(
+                collectionRef.document(tenant.id)
+            )
+        }.await()
         tenantsDao.deleteTenantById(tenant.id)
     }
 
@@ -77,7 +81,12 @@ class TenantsSyncWorker @AssistedInject constructor (
         tenant: TenantEntity,
         tenantsDao: TenantsDao
     ) {
-        collectionRef.document(tenant.id).set(tenant.copy(isSynced = true).toDomain()).await()
+        firestore.runTransaction {
+            it.set(
+                collectionRef.document(tenant.id),
+                tenant.copy(isSynced = true).toDomain()
+            )
+        }.await()
         tenantsDao.upsertTenant(tenant.copy(isSynced = true))
     }
 

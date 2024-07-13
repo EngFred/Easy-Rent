@@ -63,7 +63,6 @@ class PaymentsRepositoryImpl @Inject constructor(
                     paymentDocument.reference,
                     payment.copy(isSynced = true)
                 )
-
                 if ( tenantsDocument.exists() ) {
                     it.update(
                         tenantsDocument.reference,
@@ -155,16 +154,10 @@ class PaymentsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deletePayment(
-        payment: Payment,
-        tenant: Tenant
+        payment: Payment
     ): ServiceResponse<Unit> {
         return try {
-            var deletedFromFirestore = false
             paymentsDao.savePayment(payment.copy(isDeleted = true).toEntity())
-            //we need to reduce the balance of the tenant by the amount of the payment
-            val newBalance = tenant.balance + payment.amount
-            val updatedTenant = tenant.copy(balance = newBalance, isSynced = false)
-            tenantsDao.upsertTenant(updatedTenant.toEntity())
             firestore.runTransaction {
                 val document = it.get(firestore.collection(Collections.LANDLORDS)
                     .document(firebaseAuth.uid!!)
@@ -173,16 +166,10 @@ class PaymentsRepositoryImpl @Inject constructor(
 
                 if ( document.exists() ) {
                     it.delete(document.reference)
-                    deletedFromFirestore = true
                 }
             }.await()
-            if ( deletedFromFirestore ){
-                paymentsDao.deletePaymentById(payment.id)
-                updateTenantInFirestore(updatedTenant) //increase the balance
-                ServiceResponse.Success(Unit)
-            } else {
-                ServiceResponse.Success(Unit)
-            }
+            paymentsDao.deletePaymentById(payment.id)
+            ServiceResponse.Success(Unit)
         } catch(e: Exception) {
             Log.e(TAG, "$e.message")
             if ( e is FirebaseFirestoreException || e is FirebaseNetworkException) {
@@ -191,22 +178,5 @@ class PaymentsRepositoryImpl @Inject constructor(
                 ServiceResponse.Error(R.string.unknown_error)
             }
         }
-    }
-
-    private suspend fun updateTenantInFirestore(updatedTenant: Tenant) {
-        firestore.runTransaction {
-            val document = it.get(firestore.collection(Collections.LANDLORDS)
-                .document(firebaseAuth.uid!!)
-                .collection(Collections.TENANTS)
-                .document(updatedTenant.id))
-
-            if ( document.exists() ) {
-                it.update(
-                    document.reference,
-                    "balance", updatedTenant.balance
-                )
-            }
-        }.await()
-        tenantsDao.upsertTenant(updatedTenant.copy(isSynced = true).toEntity())
     }
 }

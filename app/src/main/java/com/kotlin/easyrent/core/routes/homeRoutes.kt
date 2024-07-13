@@ -2,9 +2,9 @@ package com.kotlin.easyrent.core.routes
 
 sealed class HomeRoutes(val destination: String ) {
     data object Expenses : HomeRoutes(destination = "expenses")
-    data object ExpenseUpsert : HomeRoutes(destination = "expenses_upsert")
+    data object AddExpense : HomeRoutes(destination = "add_expense")
     data object Payments : HomeRoutes(destination = "payments")
-    data object PaymentUpsert : HomeRoutes(destination = "payments_upsert")
+    data object AddPayment : HomeRoutes(destination = "add_payment")
     data object Rentals : HomeRoutes(destination = "rentals")
 
     data object RentalUpsert : HomeRoutes(destination = "rental_upsert")

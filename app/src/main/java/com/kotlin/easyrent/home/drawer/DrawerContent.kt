@@ -79,7 +79,7 @@ fun DrawerContent(
                     text = stringResource(id = R.string.payments),
                     fontFamily = poppins, fontWeight = FontWeight.Bold
                 ) },
-                selected = route == HomeRoutes.Payments.destination || route.contains(HomeRoutes.PaymentUpsert.destination),
+                selected = route == HomeRoutes.Payments.destination || route.contains(HomeRoutes.AddPayment.destination),
                 onClick = {
                     navigateToPayments()
                     closeDrawer()
@@ -93,7 +93,7 @@ fun DrawerContent(
                     text = stringResource(id = R.string.expenses),
                     fontFamily = poppins, fontWeight = FontWeight.Bold
                 ) },
-                selected = route == HomeRoutes.Expenses.destination || route.contains(HomeRoutes.ExpenseUpsert.destination),
+                selected = route == HomeRoutes.Expenses.destination || route.contains(HomeRoutes.AddExpense.destination),
                 onClick = {
                     navigateToExpenses()
                     closeDrawer()

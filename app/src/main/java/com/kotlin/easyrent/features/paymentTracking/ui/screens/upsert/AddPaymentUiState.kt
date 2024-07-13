@@ -6,20 +6,11 @@ import com.kotlin.easyrent.features.paymentTracking.domain.modal.PaymentStatus
 import com.kotlin.easyrent.features.rentalManagement.domain.modal.Rental
 import com.kotlin.easyrent.features.tenantManagement.domain.modal.Tenant
 
-data class PaymentUpsertUIState(
-    val paymentId: String? = null,
-    val isLoading: Boolean = true,
+data class AddPaymentUiState(
     val upserting: Boolean = false,
-    val taskSuccessfull: Boolean = false,
+    val taskSuccessful: Boolean = false,
     @StringRes
     val upsertError: Int? = null,
-    @StringRes
-    val fetchError: Int? = null,
-
-    @StringRes
-    val deletingPaymentError: Int? = null,
-
-    val deletingPayment: Boolean = false,
 
     val payment: Payment? = null,
 

@@ -25,4 +25,13 @@ interface RentalsDao {
 
     @Query("SELECT * FROM rentals WHERE isSynced = 0")
     suspend fun getAllUnsyncedRentals(): List<RentalEntity>
+
+    @Query("SELECT SUM(monthlyPayment) FROM rentals WHERE isDeleted = 0")
+    fun getTotalExpectedRevenue(): Flow<Double>
+
+    @Query("SELECT SUM(occupiedRooms) FROM rentals WHERE isDeleted = 0")
+    fun getTotalOccupiedRoomsCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM rentals WHERE isDeleted = 0")
+    fun getRentalsCount(): Flow<Int>
 }

@@ -12,7 +12,7 @@ interface PaymentRepository {
     suspend fun getUnsyncedPayments() : ServiceResponse<List<Payment>>
     suspend fun getDeletedPayments() : ServiceResponse<List<Payment>>
     suspend fun getPaymentById( paymentId: String ): ServiceResponse<Payment?>
-    suspend fun deletePayment( payment: Payment, tenant: Tenant ): ServiceResponse<Unit>
+    suspend fun deletePayment( payment: Payment ): ServiceResponse<Unit>
 
     suspend fun savePayment(
         payment: Payment,

@@ -29,4 +29,7 @@ interface TenantsDao {
     @Upsert
     suspend fun upsertTenant(tenant: TenantEntity)
 
+    @Query("SELECT COUNT(*) FROM tenants WHERE isDeleted = 0")
+    fun getTenantsCount(): Flow<Int>
+
 }

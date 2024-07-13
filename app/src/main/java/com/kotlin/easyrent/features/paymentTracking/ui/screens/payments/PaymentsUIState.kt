@@ -8,5 +8,12 @@ data class PaymentsUIState(
     @StringRes
     val loadError: Int? = null,
 
-    val payments: List<Payment> = emptyList()
+    val payments: List<Payment> = emptyList(),
+    val payment: Payment? = null,
+
+    val showDeletePaymentDialog: Boolean = false,
+    val deletingPayment: Boolean = false,
+    @StringRes
+    val deleteError: Int? = null,
+    val deleteSuccessful: Boolean = false,
 )

@@ -13,5 +13,6 @@ sealed class UpsertTenantUiEvents {
     data object AddedTenant : UpsertTenantUiEvents()
     data object DeletedTenant : UpsertTenantUiEvents()
     data object ToggledDropDownMenu : UpsertTenantUiEvents()
+    data object ShowConfirmDeleteDialog : UpsertTenantUiEvents()
 
 }

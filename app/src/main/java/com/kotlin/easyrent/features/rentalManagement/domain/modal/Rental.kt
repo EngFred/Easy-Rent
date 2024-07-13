@@ -4,14 +4,20 @@ data class Rental(
     val id: String,
     val name: String,
     val location: String,
-    val monthlyPayment: Long,
+    val monthlyPayment: Double,
     val noOfRooms: Int,
+    val occupiedRooms: Int,
     val description: String? = null,
     val image: String? = null,
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false
 ) {
     constructor() : this(
-        "","","",0L,0
+        "",
+        "",
+        "",
+        0.0,
+        0,
+        0
     )
 }

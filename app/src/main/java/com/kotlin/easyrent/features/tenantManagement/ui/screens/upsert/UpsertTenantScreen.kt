@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -29,10 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,6 +46,7 @@ import com.kotlin.easyrent.core.presentation.components.MyTextField
 import com.kotlin.easyrent.core.theme.myPrimary
 import com.kotlin.easyrent.core.theme.poppins
 import com.kotlin.easyrent.core.theme.poppinsBold
+import com.kotlin.easyrent.features.tenantManagement.domain.modal.Tenant
 import com.kotlin.easyrent.features.tenantManagement.ui.viewModel.UpsertTenantViewModel
 import com.kotlin.easyrent.utils.calculateTimeInRental
 import com.kotlin.easyrent.utils.formatCurrency
@@ -82,6 +88,18 @@ fun UpsertTenantScreen(
         onDispose {
             upsertTenantViewModel.resetErrorState()
         }
+    }
+
+    if (uiState.showConfirmDeleteDialog) {
+        ShowConfirmDeleteDialog(
+            onDismiss = {
+                  upsertTenantViewModel.onEvent(UpsertTenantUiEvents.ShowConfirmDeleteDialog)
+            },
+            onDelete = {
+                upsertTenantViewModel.onEvent(UpsertTenantUiEvents.DeletedTenant)
+            },
+            tenant = uiState.oldTenant
+        )
     }
 
     Column(
@@ -246,10 +264,23 @@ fun UpsertTenantScreen(
                     }
                 }
                 Spacer(modifier = Modifier.width(10.dp))
+                val balance = when{
+                    uiState.balance != null -> uiState.balance.toDouble()
+                    else -> {
+                        when{
+                            uiState.selectedRental != null -> uiState.selectedRental.monthlyPayment
+                            else -> 0.0
+                        }
+                    }
+                }
                 Column {
-                    Text(text = if (tenantId == null) "Rent" else "Balance", fontFamily = poppins, color = Color.Gray)
                     Text(
-                        text = if (uiState.balance != null) formatCurrency(uiState.balance.toDouble()) else "0.00",
+                        text = if (tenantId == null) "Rent" else "Balance",
+                        fontFamily = poppins,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = formatCurrency(balance),
                         fontFamily = poppins,
                         fontWeight = FontWeight.ExtraBold
                     )
@@ -293,7 +324,7 @@ fun UpsertTenantScreen(
                     text = "Remove Tenant",
                     onClick = {
                         if ( !uiState.upserting && !uiState.deletingTenant ) {
-                            upsertTenantViewModel.onEvent(UpsertTenantUiEvents.DeletedTenant)
+                            upsertTenantViewModel.onEvent(UpsertTenantUiEvents.ShowConfirmDeleteDialog)
                         }
                     },
                     backgroundColor = MaterialTheme.colorScheme.error,
@@ -319,4 +350,67 @@ fun UpsertTenantScreen(
             Spacer(modifier = Modifier.size(20.dp))
         }
     }
+}
+
+@Composable
+fun ShowConfirmDeleteDialog(
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit,
+    tenant: Tenant?
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Confirm Action", fontFamily = poppinsBold)
+        },
+        text = {
+            Column {
+                Text(text = buildAnnotatedString {
+                    withStyle(
+                        style = SpanStyle(
+                            fontFamily = poppins,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    ) {
+                        append("You are about to completely the tenant ")
+                    }
+                    withStyle(
+                        style = SpanStyle(
+                            fontFamily = poppinsBold,
+                        )
+                    ) {
+                        append(tenant?.name?.replaceFirstChar { it.uppercase() })
+                    }
+                    withStyle(
+                        style = SpanStyle(
+                            fontFamily = poppins,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    ) {
+                        append("! Please note that this action can't be undone.")
+                    }
+                })
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDelete,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(7.dp)
+            ) {
+                Text(text = "Proceed", fontFamily = poppins, fontWeight = FontWeight.ExtraBold)
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(7.dp)
+            ) {
+                Text(text = "Cancel", fontFamily = poppins, fontWeight = FontWeight.ExtraBold)
+            }
+        }
+    )
 }

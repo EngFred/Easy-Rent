@@ -27,7 +27,7 @@ data class UpsertTenantUiState(
     val email: String? = "",
     @StringRes
     val emailError: Int? = null,
-    val balance: String? = "0.00",
+    val balance: String? = null,
     @StringRes
     val balanceError: Int? = null,
     val phone: String? = null,
@@ -50,5 +50,7 @@ data class UpsertTenantUiState(
     val oldTenant: Tenant? = null,
     val oldTenantRentalId:String? = null,
     val madeChanges: Boolean = false,
+
+    val showConfirmDeleteDialog: Boolean = false,
 
     )

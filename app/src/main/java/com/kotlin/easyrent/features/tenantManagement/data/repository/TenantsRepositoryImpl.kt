@@ -1,6 +1,7 @@
 package com.kotlin.easyrent.features.tenantManagement.data.repository
 
 import android.util.Log
+import androidx.room.withTransaction
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -32,7 +33,7 @@ class TenantsRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage,
-    cacheDatabase: CacheDatabase
+    private val cacheDatabase: CacheDatabase
 ) : TenantsRepository {
 
     companion object {
@@ -52,24 +53,38 @@ class TenantsRepositoryImpl @Inject constructor(
             var rentalUpdatedInFirestore = false
             var newUpdatedRental = rental
             var oldUpdatedRental: Rental? = null
-            if(tenantStatus == TenantStatus.New) {
-                Log.v(TAG, "Tenant just moved in...")
-                tenantsDao.upsertTenant(tenant.toEntity())
-                newUpdatedRental = rental.copy(noOfRooms = (rental.noOfRooms-1), isSynced = false)
-            } else {
-                Log.v(TAG, "Tenant already moved in")
-                if ( oldRentalId != rental.id ) {
-                    //changed rental
-                    val oldRental = rentalsDao.getRentalById(oldRentalId).first()
-                    if ( oldRental != null ) {
-                        Log.v(TAG, "The rental for the tenant has been changed...")
-                        oldUpdatedRental = oldRental.copy(noOfRooms = (oldRental.noOfRooms+1), isSynced = false).toDomain()
-                        rentalsDao.upsertRental(oldUpdatedRental.toEntity())
-                        newUpdatedRental = rental.copy(noOfRooms = (rental.noOfRooms-1), isSynced = false)
+            cacheDatabase.withTransaction {
+                if(tenantStatus == TenantStatus.New) {
+                    Log.v(TAG, "Tenant just moved in...")
+                    tenantsDao.upsertTenant(tenant.toEntity())
+                    newUpdatedRental = rental.copy(
+                        noOfRooms = (rental.noOfRooms - 1),
+                        occupiedRooms = (rental.occupiedRooms + 1),
+                        isSynced = false
+                    )
+                } else {
+                    Log.v(TAG, "Tenant already moved in")
+                    if ( oldRentalId != rental.id ) {
+                        //changed rental
+                        val oldRental = rentalsDao.getRentalById(oldRentalId).first()
+                        if ( oldRental != null ) {
+                            Log.v(TAG, "The rental for the tenant has been changed...")
+                            oldUpdatedRental = oldRental.copy(
+                                noOfRooms = (oldRental.noOfRooms + 1),
+                                occupiedRooms = (oldRental.occupiedRooms - 1),
+                                isSynced = false
+                            ).toDomain()
+                            rentalsDao.upsertRental(oldUpdatedRental!!.toEntity())
+                            newUpdatedRental = rental.copy(
+                                noOfRooms = (rental.noOfRooms - 1),
+                                occupiedRooms = (rental.occupiedRooms + 1),
+                                isSynced = false
+                            )
+                        }
                     }
                 }
+                rentalsDao.upsertRental(newUpdatedRental.toEntity())
             }
-            rentalsDao.upsertRental(newUpdatedRental.toEntity())
             firestore.runTransaction {
 
                 val tenantDocument = it.get(firestore.collection(Collections.LANDLORDS)
@@ -86,12 +101,16 @@ class TenantsRepositoryImpl @Inject constructor(
                     val oldRentalDocument = it.get(firestore.collection(Collections.LANDLORDS)
                         .document(firebaseAuth.uid!!)
                         .collection(Collections.RENTALS)
-                        .document(oldUpdatedRental.id))
+                        .document(oldUpdatedRental!!.id))
 
                     if ( oldRentalDocument.exists() ) {
                         it.update(
                             oldRentalDocument.reference,
-                            "noOfRooms", oldUpdatedRental.noOfRooms
+                            mapOf(
+                                "noOfRooms" to oldUpdatedRental!!.noOfRooms,
+                                "occupiedRooms" to oldUpdatedRental!!.occupiedRooms,
+                                "isSynced" to true
+                            )
                         )
                     }
 
@@ -99,7 +118,11 @@ class TenantsRepositoryImpl @Inject constructor(
                         if ( tenantStatus == TenantStatus.New ) {
                             it.update(
                                 newRentalsDocument.reference,
-                                "noOfRooms", newUpdatedRental.noOfRooms
+                                mapOf(
+                                    "noOfRooms" to newUpdatedRental.noOfRooms,
+                                    "occupiedRooms" to newUpdatedRental.occupiedRooms,
+                                    "isSynced" to true
+                                )
                             )
                             rentalUpdatedInFirestore = true
                         }
@@ -115,7 +138,11 @@ class TenantsRepositoryImpl @Inject constructor(
                         if ( tenantStatus == TenantStatus.New ) {
                             it.update(
                                 newRentalsDocument.reference,
-                                "noOfRooms", newUpdatedRental.noOfRooms
+                                mapOf(
+                                    "noOfRooms" to newUpdatedRental.noOfRooms,
+                                    "occupiedRooms" to newUpdatedRental.occupiedRooms,
+                                    "isSynced" to true
+                                )
                             )
                             rentalUpdatedInFirestore = true
                         }
@@ -128,10 +155,12 @@ class TenantsRepositoryImpl @Inject constructor(
                 )
 
             }.await()
-            tenantsDao.upsertTenant(tenant.copy(isSynced = true).toEntity())
-            rentalsDao.upsertRental(newUpdatedRental.copy(isSynced = true).toEntity())
-            if ( oldUpdatedRental != null ) {
-                rentalsDao.upsertRental(oldUpdatedRental.copy(isSynced = true).toEntity())
+            cacheDatabase.withTransaction {
+                tenantsDao.upsertTenant(tenant.copy(isSynced = true).toEntity())
+                rentalsDao.upsertRental(newUpdatedRental.copy(isSynced = true).toEntity())
+                if ( oldUpdatedRental != null ) {
+                    rentalsDao.upsertRental(oldUpdatedRental!!.copy(isSynced = true).toEntity())
+                }
             }
             ServiceResponse.Success(Unit)
         }catch (e: Exception) {
@@ -157,13 +186,22 @@ class TenantsRepositoryImpl @Inject constructor(
         }.flowOn(Dispatchers.IO)
     }
 
-    override suspend fun deleteTenant(tenant: Tenant, rental: Rental): ServiceResponse<Unit> {
+    override suspend fun deleteTenant(
+        tenant: Tenant,
+        rental: Rental
+    ): ServiceResponse<Unit> {
         return try {
             var deletedFromFirestore = false
-            tenantsDao.upsertTenant(tenant.copy(isDeleted = true).toEntity())
-            //we need to increase the number of rooms available by one
-            val updatedRental = rental.copy(noOfRooms = rental.noOfRooms+1, isSynced = false)
-            rentalsDao.upsertRental(updatedRental.toEntity())
+            var updatedRental: Rental = rental
+            cacheDatabase.withTransaction {
+                tenantsDao.upsertTenant(tenant.copy(isDeleted = true).toEntity())
+                updatedRental = rental.copy(
+                    noOfRooms = rental.noOfRooms + 1,
+                    occupiedRooms = rental.occupiedRooms - 1,
+                    isSynced = false
+                )
+                rentalsDao.upsertRental(updatedRental.toEntity())
+            }
             firestore.runTransaction {
                 val document = it.get(firestore.collection(Collections.LANDLORDS)
                     .document(firebaseAuth.uid!!)
@@ -202,7 +240,10 @@ class TenantsRepositoryImpl @Inject constructor(
             if ( document.exists() ) {
                 it.update(
                     document.reference,
-                    "noOfRooms", updatedRental.noOfRooms
+                    mapOf(
+                        "noOfRooms" to updatedRental.noOfRooms,
+                        "occupiedRooms" to updatedRental.occupiedRooms
+                    )
                 )
             }
         }.await()

@@ -81,4 +81,9 @@
     <string name="tenants_exist_error">There are tenants inside this rental! Please remove all tenants first.</string>
     <string name="rental_is_required">Rental is required!</string>
     <string name="payment_greater_than_rent">Payment can\'t be greater than the rent</string>
+
+    <string name="empty_amount">Please enter amount</string>
+    <string name="empty_description">A short description is required</string>
+    <string name="long_description">That description is too long</string>ng>
+    <string name="invalid_amount">Amount entered is invalid</string>
 </resources>

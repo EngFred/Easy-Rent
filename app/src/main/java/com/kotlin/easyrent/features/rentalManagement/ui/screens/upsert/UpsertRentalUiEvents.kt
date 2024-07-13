@@ -10,5 +10,6 @@ sealed class UpsertRentalUiEvents {
     data object AddedRental : UpsertRentalUiEvents()
     data object DeletedRental : UpsertRentalUiEvents()
     data object ShowPhotoOptionsDialogToggled : UpsertRentalUiEvents()
+    data object ShowConfirmDeleteDialogToggled : UpsertRentalUiEvents()
 
 }

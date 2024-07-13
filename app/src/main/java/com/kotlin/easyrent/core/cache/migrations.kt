@@ -34,3 +34,25 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         db.execSQL("ALTER TABLE tenants ADD COLUMN year INTEGER NOT NULL DEFAULT ${getCurrentMonthAndYear().second}")
     }
 }
+
+
+
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Create the new payments table
+        db.execSQL(
+            """
+            CREATE TABLE expenses (
+                id TEXT NOT NULL PRIMARY KEY,
+                rentalId TEXT NOT NULL,
+                rentalName TEXT NOT NULL,
+                description TEXT NOT NULL,
+                amount REAL NOT NULL,
+                date INTEGER NOT NULL,
+                isSynced INTEGER NOT NULL DEFAULT 0,
+                isDeleted INTEGER NOT NULL DEFAULT 0
+            )
+            """.trimIndent()
+        )
+    }
+}

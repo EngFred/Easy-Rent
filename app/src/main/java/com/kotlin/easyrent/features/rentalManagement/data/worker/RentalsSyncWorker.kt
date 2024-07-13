@@ -70,7 +70,12 @@ class RentalsSyncWorker @AssistedInject constructor (
         rental: RentalEntity,
         rentalsDao: RentalsDao
     ) {
-        collectionRef.document(rental.id).delete().await()
+
+        firestore.runTransaction {
+            it.delete(
+                collectionRef.document(rental.id)
+            )
+        }.await()
         rentalsDao.deleteRental(rental.id)
     }
 
@@ -79,7 +84,12 @@ class RentalsSyncWorker @AssistedInject constructor (
         rental: RentalEntity,
         rentalsDao: RentalsDao
     ) {
-        collection.document(rental.id).set(rental.copy(isSynced = true).toDomain()).await()
+        firestore.runTransaction {
+            it.set(
+                collection.document(rental.id),
+                rental.copy(isSynced = true).toDomain()
+            )
+        }.await()
         rentalsDao.upsertRental(rental.copy(isSynced = true))
     }
 }

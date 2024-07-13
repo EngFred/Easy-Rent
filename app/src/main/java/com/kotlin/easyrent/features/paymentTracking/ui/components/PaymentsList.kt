@@ -1,8 +1,7 @@
 package com.kotlin.easyrent.features.paymentTracking.ui.components
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.kotlin.easyrent.features.paymentTracking.domain.modal.Payment
@@ -11,17 +10,16 @@ import com.kotlin.easyrent.features.paymentTracking.domain.modal.Payment
 fun PaymentsList(
     modifier: Modifier,
     payments: List<Payment>,
-    onClick: (String) -> Unit,
+    onLongPress: (Payment) -> Unit,
 ) {
-    LazyVerticalStaggeredGrid(
-        columns = StaggeredGridCells.Fixed(2),
+    LazyColumn(
         modifier = modifier.fillMaxSize()
     ) {
         items(
             count = payments.size,
             key = { payments[it].id }
         ) {
-            PaymentItem(onClick = onClick, payment = payments[it])
+            PaymentItem(onLongPress = onLongPress, payment = payments[it])
         }
     }
 }

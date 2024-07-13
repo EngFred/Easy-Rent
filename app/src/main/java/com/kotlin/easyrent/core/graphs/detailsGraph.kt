@@ -10,9 +10,10 @@ import androidx.navigation.navigation
 import com.kotlin.easyrent.core.presentation.SharedViewModel
 import com.kotlin.easyrent.core.routes.Graphs
 import com.kotlin.easyrent.core.routes.HomeRoutes
-import com.kotlin.easyrent.features.expenseTracking.ui.screens.ExpensesScreen
+import com.kotlin.easyrent.features.expenseTracking.ui.screens.add.AddExpenseScreen
+import com.kotlin.easyrent.features.expenseTracking.ui.screens.expenses.ExpensesScreen
 import com.kotlin.easyrent.features.paymentTracking.ui.screens.payments.PaymentsScreen
-import com.kotlin.easyrent.features.paymentTracking.ui.screens.upsert.PaymentUpsertScreen
+import com.kotlin.easyrent.features.paymentTracking.ui.screens.upsert.AddPaymentScreen
 import com.kotlin.easyrent.features.rentalManagement.ui.screens.rentals.RentalsScreen
 import com.kotlin.easyrent.features.rentalManagement.ui.screens.upsert.UpsertRentalsScreen
 import com.kotlin.easyrent.features.tenantManagement.ui.screens.tenants.TenantsScreen
@@ -54,7 +55,14 @@ fun NavGraphBuilder.detailGraph(
         composable(
             route = HomeRoutes.Expenses.destination
         ) {
-            ExpensesScreen()
+            ExpensesScreen(
+                modifier = modifier,
+                onAddExpense = {
+                    navController.navigate(HomeRoutes.AddExpense.destination){
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
 
         composable(
@@ -64,14 +72,7 @@ fun NavGraphBuilder.detailGraph(
                modifier = modifier,
                onAddPayment = {
                    navController.navigate(
-                       HomeRoutes.PaymentUpsert.destination
-                   ) {
-                       launchSingleTop = true
-                   }
-               },
-               onUpsertPayment = { paymentId ->
-                   navController.navigate(
-                       "${HomeRoutes.PaymentUpsert.destination}?$paymentId"
+                       HomeRoutes.AddPayment.destination
                    ) {
                        launchSingleTop = true
                    }
@@ -137,19 +138,23 @@ fun NavGraphBuilder.detailGraph(
         }
 
         composable(
-            route = "${HomeRoutes.PaymentUpsert.destination}?{${Keys.PAYMENT_ID}}",
-            arguments = listOf(
-                navArgument(Keys.PAYMENT_ID) {
-                    type = NavType.StringType
-                    nullable = true
+            route = HomeRoutes.AddPayment.destination
+        ) {
+            AddPaymentScreen(
+                modifier = modifier,
+                onTaskSuccess = {
+                    navController.popBackStack()
                 }
             )
-        ) { navBackStackEntry ->
-            val paymentId = navBackStackEntry.arguments?.getString(Keys.PAYMENT_ID)
-            PaymentUpsertScreen(
+        }
+
+
+        composable(
+            route = HomeRoutes.AddExpense.destination
+        ) {
+            AddExpenseScreen(
                 modifier = modifier,
-                paymentId = paymentId,
-                onTaskSuccess = {
+                onAddSuccessful = {
                     navController.popBackStack()
                 }
             )

@@ -177,6 +177,15 @@ fun formatCurrency(amount: Double): String {
         return "UGX.$amount"
     }
 }
+fun formatCurrencyWithNoUGX(amount: Double): String {
+    try {
+        val numberFormat = NumberFormat.getNumberInstance(Locale.US)
+        val formattedAmount = numberFormat.format(amount)
+        return formattedAmount
+    } catch (e: NumberFormatException) {
+        return amount.toString()
+    }
+}
 
 //fun calculateDaysInRental(moveInDate: Long): Long {
 //    val currentDate = Date().time
@@ -238,4 +247,13 @@ fun formatTimestampWithSuffix(timestamp: Long): String {
     val time = zonedDateTime.format(timeFormatter).replace("AM", "am").replace("PM", "pm")
 
     return "$dayWithSuffix/$month/$year at $time"
+}
+
+fun formatDate(
+    timestamp: Long,
+    pattern: String
+): String {
+    val date = Date(timestamp)
+    val format = SimpleDateFormat(pattern, Locale.getDefault())
+    return format.format(date)
 }

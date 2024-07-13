@@ -1,46 +1,108 @@
 package com.kotlin.easyrent.features.tenantManagement.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kotlin.easyrent.core.theme.myPrimary
+import com.kotlin.easyrent.R
+import com.kotlin.easyrent.core.presentation.components.SyncIndicator
 import com.kotlin.easyrent.core.theme.poppins
 import com.kotlin.easyrent.core.theme.poppinsBold
 import com.kotlin.easyrent.features.tenantManagement.domain.modal.Tenant
+import com.kotlin.easyrent.utils.formatDate
 
 @Composable
 fun TenantItem(
     modifier: Modifier = Modifier,
     onClick: (String) -> Unit,
-    tenant: Tenant,
+    tenant: Tenant
 ) {
-    Column(
+    
+    Row(
         modifier = modifier
             .clickable { onClick(tenant.id) }
-            .padding(horizontal = 10.dp)
-            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 10.dp)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-
-        Spacer(modifier = Modifier.height(7.dp))
-        Text(text = tenant.name, fontFamily = poppinsBold, fontSize = 20.sp)
-        Text(text = tenant.rentalName, fontFamily = poppins)
-        Text(
-            text = if (tenant.isSynced) "Synced" else "Not synced",
-            fontFamily = poppins,
-            fontSize = 12.sp,
-            color = if (tenant.isSynced) myPrimary else MaterialTheme.colorScheme.error
+        Image(
+            painterResource(id = R.drawable.profile_picture),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = modifier
+                .size(60.dp)
+                .clip(CircleShape)
         )
-        Spacer(modifier = Modifier.height(7.dp))
-        HorizontalDivider()
+        Spacer(modifier = Modifier.size(10.dp))
+        Column{
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    text = tenant.name.replaceFirstChar { it.uppercase() },
+                    fontFamily = poppinsBold,
+                    fontSize = 20.sp
+                )
+                Text(
+                    text = formatDate(pattern = "M/d/yy", timestamp = tenant.moveInDate),
+                    fontFamily = poppins,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 13.sp
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Home,
+                        contentDescription = null,
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = tenant.rentalName.replaceFirstChar { it.uppercase() },
+                        fontFamily = poppins,
+                        maxLines = 1,
+                        fontWeight = FontWeight.ExtraBold,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                SyncIndicator(isSynced = tenant.isSynced)
+            }
+        }
     }
+    HorizontalDivider()
 }

@@ -131,11 +131,20 @@ class UpsertRentalViewModel @Inject constructor(
             UpsertRentalUiEvents.DeletedRental -> {
                 _uiState.update {
                     it.copy(
-                        deletingRental = true
+                        deletingRental = true,
+                        showConfirmDeleteDialog = false
                     )
                 }
                 _uiState.value.oldRental?.let {
                     deleteRental(it)
+                }
+            }
+
+            UpsertRentalUiEvents.ShowConfirmDeleteDialogToggled -> {
+                _uiState.update {
+                    it.copy(
+                        showConfirmDeleteDialog = !it.showConfirmDeleteDialog
+                    )
                 }
             }
         }
@@ -146,7 +155,7 @@ class UpsertRentalViewModel @Inject constructor(
         val nameValidationResults = !_uiState.value.name.isNullOrEmpty() && _uiState.value.name!!.length >= 3
         val locationValidationResults = !_uiState.value.location.isNullOrEmpty()
         val noOfRoomsValidationResults = !_uiState.value.noOfRooms.isNullOrEmpty()  && _uiState.value.noOfRooms != "0" && _uiState.value.noOfRooms?.toIntOrNull() != null
-        val monthlyPaymentValidationResults = !_uiState.value.monthlyPayment.isNullOrEmpty()  && _uiState.value.monthlyPayment != "0" && _uiState.value.monthlyPayment?.toIntOrNull() != null
+        val monthlyPaymentValidationResults = !_uiState.value.monthlyPayment.isNullOrEmpty()  && _uiState.value.monthlyPayment != "0" && _uiState.value.monthlyPayment?.toDoubleOrNull() != null
 
         val validationResults = nameValidationResults && locationValidationResults && noOfRoomsValidationResults && monthlyPaymentValidationResults
         Log.v("#", "Validation results $validationResults\nNameResults: $nameValidationResults\nLocationResults: $locationValidationResults\nNoOfRoomsResults: $noOfRoomsValidationResults\nMonthlyPaymentResults: $monthlyPaymentValidationResults")
@@ -165,7 +174,8 @@ class UpsertRentalViewModel @Inject constructor(
             location = _uiState.value.location!!.trim(),
             image = _uiState.value.imageUrl,
             noOfRooms = _uiState.value.noOfRooms!!.toInt(),
-            monthlyPayment = _uiState.value.monthlyPayment!!.toLong(),
+            occupiedRooms = 0,
+            monthlyPayment = _uiState.value.monthlyPayment!!.toDouble(),
             description = _uiState.value.description?.trim()
         )
 
@@ -300,7 +310,7 @@ class UpsertRentalViewModel @Inject constructor(
     private fun  validateMonthlyPayment(monthlyPayment: String) {
         val monthlyPaymentError = when {
             monthlyPayment.isEmpty() || monthlyPayment == "0" -> R.string.empty_payment
-            monthlyPayment.toIntOrNull() == null -> R.string.invalid_payment
+            monthlyPayment.toDoubleOrNull() == null -> R.string.invalid_payment
             else -> null
         }
         _uiState.update {

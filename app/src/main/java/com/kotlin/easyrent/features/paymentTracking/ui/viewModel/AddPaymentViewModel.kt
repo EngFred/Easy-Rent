@@ -1,20 +1,16 @@
 package com.kotlin.easyrent.features.paymentTracking.ui.viewModel
 
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kotlin.easyrent.R
 import com.kotlin.easyrent.features.paymentTracking.domain.modal.Payment
-import com.kotlin.easyrent.features.paymentTracking.domain.usecase.DeletePaymentUseCase
-import com.kotlin.easyrent.features.paymentTracking.domain.usecase.GetPaymentByIdUseCase
 import com.kotlin.easyrent.features.paymentTracking.domain.usecase.SavePaymentUseCase
-import com.kotlin.easyrent.features.paymentTracking.ui.screens.upsert.PaymentUpsertUIEvents
-import com.kotlin.easyrent.features.paymentTracking.ui.screens.upsert.PaymentUpsertUIState
+import com.kotlin.easyrent.features.paymentTracking.ui.screens.upsert.AddPaymentUiEvents
+import com.kotlin.easyrent.features.paymentTracking.ui.screens.upsert.AddPaymentUiState
 import com.kotlin.easyrent.features.rentalManagement.domain.usecase.GetAllRentalsUseCase
 import com.kotlin.easyrent.features.tenantManagement.domain.modal.Tenant
 import com.kotlin.easyrent.features.tenantManagement.domain.usecase.GetAllTenantsUseCase
-import com.kotlin.easyrent.utils.Keys
 import com.kotlin.easyrent.utils.ServiceResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -28,58 +24,31 @@ import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
-class PaymentUpsertViewModel @Inject constructor(
+class AddPaymentViewModel @Inject constructor(
     private val getAllRentalsUseCase: GetAllRentalsUseCase,
     private val getAllTenantsUseCase: GetAllTenantsUseCase,
     private val savePaymentUseCase: SavePaymentUseCase,
-    private val deletePaymentUseCase: DeletePaymentUseCase,
-    private val getPaymentByIdUseCase: GetPaymentByIdUseCase,
-    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(PaymentUpsertUIState())
+    private val _uiState = MutableStateFlow(AddPaymentUiState())
     val uiState = _uiState.asStateFlow()
-
-    private val paymentId = savedStateHandle.get<String>(Keys.PAYMENT_ID)
 
 
     init {
-        if ( paymentId != null ) {
-            getPayment(paymentId)
-        } else {
-            _uiState.update {
-                it.copy(
-                    isLoading = false
-                )
-            }
-        }
         getRentals()
         getTenants()
     }
 
-    fun onEvent(event: PaymentUpsertUIEvents) {
-        if ( _uiState.value.fetchError != null || _uiState.value.upsertError != null ) {
+    fun onEvent(event: AddPaymentUiEvents) {
+        if ( _uiState.value.upsertError != null ) {
             _uiState.update {
                 it.copy(
-                    fetchError = null,
                     upsertError = null
                 )
             }
         }
         when(event) {
-            PaymentUpsertUIEvents.DeletedPayment -> {
-
-                if ( _uiState.value.payment != null && _uiState.value.selectedTenant != null) {
-                    _uiState.update {
-                        it.copy(
-                            deletingPayment = true
-                        )
-                    }
-                    deletePayment(_uiState.value.payment!!, _uiState.value.selectedTenant!!)
-                }
-
-            }
-            is PaymentUpsertUIEvents.RentalSelected -> {
+            is AddPaymentUiEvents.RentalSelected -> {
 
                 if ( _uiState.value.selectedRental != event.rental ) {
                     _uiState.update {
@@ -88,6 +57,7 @@ class PaymentUpsertViewModel @Inject constructor(
                             lastAmountPaid = 0.0
                         )
                     }
+
                     _uiState.update {
                         it.copy(
                             selectedRental = event.rental,
@@ -120,12 +90,12 @@ class PaymentUpsertViewModel @Inject constructor(
                     validateAmount(_uiState.value.amount?.trim() ?: "0")
                 }
             }
-            PaymentUpsertUIEvents.SavedPayment -> {
+            AddPaymentUiEvents.SavedAddPayment -> {
                 if ( _uiState.value.isFormValid ) {
                     savePayment(_uiState.value.selectedTenant!!)
                 }
             }
-            is PaymentUpsertUIEvents.TenantSelected -> {
+            is AddPaymentUiEvents.TenantSelected -> {
                 if ( _uiState.value.selectedTenant != event.tenant ) {
                     _uiState.update {
                         it.copy(
@@ -140,8 +110,12 @@ class PaymentUpsertViewModel @Inject constructor(
                         showTenantsDropDownMenu =  !it.showTenantsDropDownMenu
                     )
                 }
+
+                _uiState.value.selectedRental?.let {
+                    validateAmount(_uiState.value.amount?.trim() ?: "0")
+                }
             }
-            PaymentUpsertUIEvents.ToggledRentalsDropDownMenu -> {
+            AddPaymentUiEvents.ToggledRentalsDropDownMenu -> {
                 _uiState.update {
                     it.copy(
                         showRentalsDropDownMenu = !_uiState.value.showRentalsDropDownMenu,
@@ -149,7 +123,7 @@ class PaymentUpsertViewModel @Inject constructor(
                     )
                 }
             }
-            PaymentUpsertUIEvents.ToggledTenantsDropDownMenu -> {
+            AddPaymentUiEvents.ToggledTenantsDropDownMenu -> {
                 _uiState.update {
                     it.copy(
                         showTenantsDropDownMenu = !_uiState.value.showTenantsDropDownMenu,
@@ -158,7 +132,7 @@ class PaymentUpsertViewModel @Inject constructor(
                 }
             }
 
-            is PaymentUpsertUIEvents.AmountChanged -> {
+            is AddPaymentUiEvents.AmountChanged -> {
                 _uiState.update {
                     it.copy(
                         amount = event.amount
@@ -181,21 +155,24 @@ class PaymentUpsertViewModel @Inject constructor(
                 }
                 ServiceResponse.Idle -> Unit
                 is ServiceResponse.Success -> {
-                    if ( result.data.isNotEmpty() && result.data.size == 1 ) {
-                        _uiState.update {
-                            it.copy(
-                                selectedTenant = result.data[0]
-                            )
-                        }
-                    } else {
-                        _uiState.update {
-                            it.copy(
-                                allTenants = result.data
-                            )
-                        }
+                    _uiState.update {
+                        it.copy(
+                            allTenants = result.data
+                        )
+                    }
+                    if ( _uiState.value.selectedRental != null ) {
+                        filterRentalTenants()
                     }
                 }
             }
+        }
+    }
+
+    private fun filterRentalTenants() {
+        _uiState.update {
+            it.copy(
+                rentalTenants = it.allTenants.filter { it.rentalId == _uiState.value.selectedRental?.id }
+            )
         }
     }
 
@@ -207,47 +184,12 @@ class PaymentUpsertViewModel @Inject constructor(
                 }
                 ServiceResponse.Idle -> Unit
                 is ServiceResponse.Success -> {
-                    if ( result.data.isNotEmpty() && result.data.size == 1 ) {
-                        _uiState.update {
-                            it.copy(
-                                selectedRental = result.data[0]
-                            )
-                        }
-                    } else {
-                        _uiState.update {
-                            it.copy(
-                                rentals = result.data,
-                            )
-                        }
+                    _uiState.update {
+                        it.copy(
+                            selectedRental = if(result.data.size == 1) result.data[0] else it.selectedRental,
+                            rentals = result.data
+                        )
                     }
-                }
-            }
-        }
-    }
-
-    private fun getPayment( id: String ) = viewModelScope.launch(Dispatchers.IO) {
-        val result = getPaymentByIdUseCase.invoke(id)
-        Log.d("TAG", "Task done!")
-        when(result) {
-            is ServiceResponse.Error -> {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        fetchError = result.message
-                    )
-                }
-            }
-            ServiceResponse.Idle -> Unit
-            is ServiceResponse.Success -> {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        payment = result.data,
-                        paymentId = result.data?.id,
-                        paymentDate = result.data?.date,
-                        amount = result.data?.amount.toString(), //changes with user interaction
-                        paymentCompleted = result.data?.completed ?: false
-                    )
                 }
             }
         }
@@ -256,7 +198,7 @@ class PaymentUpsertViewModel @Inject constructor(
 
     private fun savePayment(tenant: Tenant) = viewModelScope.launch( Dispatchers.IO ) {
         val payment = Payment(
-            id = _uiState.value.paymentId ?: UUID.randomUUID().toString(),
+            id = UUID.randomUUID().toString(),
             rentalId = _uiState.value.selectedRental?.id!!,
             tenantId = _uiState.value.selectedTenant?.id!!,
             by = _uiState.value.selectedTenant!!.name,
@@ -287,31 +229,7 @@ class PaymentUpsertViewModel @Inject constructor(
             is ServiceResponse.Success -> {
                 _uiState.update {
                     it.copy(
-                        taskSuccessfull = true
-                    )
-                }
-            }
-        }
-    }
-
-    private fun deletePayment(payment: Payment, tenant: Tenant) = viewModelScope.launch(Dispatchers.IO) {
-        val result = deletePaymentUseCase.invoke(payment, tenant)
-        Log.d("TAG", "Task done!")
-        when(result) {
-            is ServiceResponse.Error -> {
-                _uiState.update {
-                    it.copy(
-                        deletingPayment = false,
-                        deletingPaymentError = result.message
-                    )
-                }
-            }
-            ServiceResponse.Idle -> Unit
-            is ServiceResponse.Success -> {
-                _uiState.update {
-                    it.copy(
-                        deletingPayment = false,
-                        taskSuccessfull = true
+                        taskSuccessful = true
                     )
                 }
             }
