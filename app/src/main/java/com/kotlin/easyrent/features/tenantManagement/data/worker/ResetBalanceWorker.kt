@@ -13,13 +13,15 @@ import com.kotlin.easyrent.features.tenantManagement.data.dao.TenantsDao
 import com.kotlin.easyrent.features.tenantManagement.data.mapper.toDomain
 import com.kotlin.easyrent.features.tenantManagement.data.modal.TenantEntity
 import com.kotlin.easyrent.utils.Collections
-import com.kotlin.easyrent.utils.getCurrentMonthAndYear
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.tasks.await
+import java.util.Calendar
+import java.util.Date
 
 @HiltWorker
-class DaysCalculationWorker @AssistedInject constructor (
+class ResetBalanceWorker @AssistedInject constructor (
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     @Assisted private val cacheDatabase: CacheDatabase,
@@ -28,57 +30,57 @@ class DaysCalculationWorker @AssistedInject constructor (
 ) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result {
         try {
-            Log.i("MyWorker", "DaysCalculationWorker started!")
+            Log.i("MyWorker", "ResetBalanceWorker started!")
             val tenantsDao = cacheDatabase.tenantsDao()
             val rentalsDao = cacheDatabase.rentalsDao()
-            if ( firebaseAuth.uid != null ) {
-                Log.i("MyWorker", "Checking tenants with due rent...")
-                val (month, year) = getCurrentMonthAndYear()
-                val allTenants = tenantsDao.getAllTenants().first()
-                if ( allTenants.isNotEmpty() ) {
-                    allTenants.forEach { tenant ->
-                        if ( (tenant.month.lowercase() != month.lowercase()) && (tenant.year == year)) {
-                            updateTenantInfo(tenant, tenantsDao, rentalsDao)
-                        }
+            Log.i("MyWorker", "Checking tenants with due rent...")
+            val allTenants = tenantsDao.getAllTenants().first()
+            val currentDate = Date().time
+            if ( allTenants.isNotEmpty() ) {
+                allTenants.forEach { tenant ->
+                    val calendar = Calendar.getInstance().apply {
+                        timeInMillis = tenant.lastResetDate
+                    }
+
+                    val lastMonth = calendar.get(Calendar.MONTH)
+                    calendar.timeInMillis = currentDate
+                    val currentMonth = calendar.get(Calendar.MONTH)
+
+                    if (currentMonth != lastMonth) {
+                        resetTenantBalance(tenant, currentDate, tenantsDao, rentalsDao)
                     }
                 }
             }
-            Log.i("MyWorker", "DaysCalculationWorker:::All checks done!")
+            Log.i("MyWorker", "ResetBalanceWorker:::All checks done!")
             return Result.success()
         }catch (e: Exception){
             return Result.failure()
         }
     }
 
-    private suspend fun updateTenantInfo(
+    private suspend fun resetTenantBalance(
         tenant: TenantEntity,
+        currentDate: Long,
         tenantsDao: TenantsDao,
         rentalsDao: RentalsDao
     ) {
-        val hasNotYetPaidRentForMonth = (tenant.balance != 0.0)
         val tenantRental = rentalsDao.getRentalById(tenant.rentalId).first()
-        tenantRental?.let {
-            val updatedTenant = if (hasNotYetPaidRentForMonth) {
-                tenant.copy(
-                    unpaidMonths = tenant.unpaidMonths + 1,
-                    isSynced = false,
-                    month = getCurrentMonthAndYear().first,
-                    balance = tenant.balance + tenantRental.monthlyPayment
-                )
-            } else {
-                tenant.copy(
-                    month = getCurrentMonthAndYear().first,
-                    balance = tenantRental.monthlyPayment.toDouble(),
-                    isSynced = false
-                )
-            }
-            tenantsDao.upsertTenant(updatedTenant)
+        val rentalMonthlyPayment = tenantRental?.monthlyPayment ?: 0.0
+        val newBalance = tenant.balance + rentalMonthlyPayment
+        val updatedTenant = tenant.copy(
+            balance = newBalance,
+            unpaidMonths = if ( tenant.balance != 0.0  ) tenant.unpaidMonths+1 else tenant.unpaidMonths,
+            lastResetDate = currentDate,
+            isSynced = false
+        )
+        tenantsDao.upsertTenant(updatedTenant)
+        if ( firebaseAuth.uid != null ) {
             val collectionRef = firestore
                 .collection(Collections.LANDLORDS)
                 .document(firebaseAuth.uid!!)
                 .collection(Collections.TENANTS)
 
-            collectionRef.document(tenant.id).set(updatedTenant.copy(isSynced = true).toDomain())
+            collectionRef.document(tenant.id).set(updatedTenant.copy(isSynced = true).toDomain()).await()
             tenantsDao.upsertTenant(updatedTenant.copy(isSynced = true))
         }
     }

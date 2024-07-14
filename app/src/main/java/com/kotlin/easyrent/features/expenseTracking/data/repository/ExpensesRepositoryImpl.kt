@@ -66,18 +66,6 @@ class ExpensesRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getAllExpenses(): Flow<ServiceResponse<List<Expense>>> {
-        return channelFlow {
-            send(ServiceResponse.Idle)
-            expenseDao.getAllExpenses().collectLatest {
-                send(ServiceResponse.Success(it.map { it.toDomain() }))
-            }
-        }.catch{
-            Log.e(TAG, "${it.message}")
-            emit(ServiceResponse.Error(R.string.unknown_error))
-        }.flowOn(Dispatchers.IO)
-    }
-
     override suspend fun deleteExpense(expense: Expense): ServiceResponse<Unit> {
         return try {
             withContext(NonCancellable) {
@@ -186,6 +174,18 @@ class ExpensesRepositoryImpl @Inject constructor(
             send(ServiceResponse.Idle)
             expenseDao.getTotalExpenses().collectLatest {
                 send(ServiceResponse.Success(it))
+            }
+        }.catch{
+            Log.e(TAG, "${it.message}")
+            emit(ServiceResponse.Error(R.string.unknown_error))
+        }.flowOn(Dispatchers.IO)
+    }
+
+    override fun getAllExpenses(): Flow<ServiceResponse<List<Expense>>> {
+        return channelFlow {
+            send(ServiceResponse.Idle)
+            expenseDao.getAllExpenses().collectLatest {
+                send(ServiceResponse.Success(it.map { it.toDomain() }))
             }
         }.catch{
             Log.e(TAG, "${it.message}")

@@ -18,7 +18,7 @@ import com.kotlin.easyrent.core.cache.CacheDatabase
 import com.kotlin.easyrent.features.expenseTracking.data.worker.ExpensesSyncWorker
 import com.kotlin.easyrent.features.paymentTracking.data.worker.PaymentsSyncWorker
 import com.kotlin.easyrent.features.rentalManagement.data.worker.RentalsSyncWorker
-import com.kotlin.easyrent.features.tenantManagement.data.worker.DaysCalculationWorker
+import com.kotlin.easyrent.features.tenantManagement.data.worker.ResetBalanceWorker
 import com.kotlin.easyrent.features.tenantManagement.data.worker.TenantsSyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -89,7 +89,7 @@ class EasyRentApplication : Application(),
                     firestore,
                     firebaseAuth
                 )
-                DaysCalculationWorker::class.java.name -> return DaysCalculationWorker(
+                ResetBalanceWorker::class.java.name -> return ResetBalanceWorker(
                     appContext,
                     workerParameters,
                     cacheDatabase,

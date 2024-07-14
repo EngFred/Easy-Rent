@@ -2,11 +2,18 @@ package com.kotlin.easyrent.features.expenseTracking.ui.screens.expenses
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,8 +48,10 @@ import com.kotlin.easyrent.core.theme.myPrimary
 import com.kotlin.easyrent.core.theme.poppins
 import com.kotlin.easyrent.core.theme.poppinsBold
 import com.kotlin.easyrent.features.expenseTracking.domain.modal.Expense
+import com.kotlin.easyrent.features.expenseTracking.domain.modal.ExpenseRange
 import com.kotlin.easyrent.features.expenseTracking.ui.components.ExpensesList
 import com.kotlin.easyrent.features.expenseTracking.ui.viewModel.ExpensesViewModel
+import com.kotlin.easyrent.utils.formatCurrency
 
 @Composable
 fun ExpensesScreen(
@@ -87,8 +97,7 @@ fun ExpensesScreen(
         uiState.isLoading || uiState.loadError != null  -> {
             Box(
                 modifier = modifier
-                    .fillMaxSize()
-                    .padding(20.dp),
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 if ( uiState.isLoading ) {
@@ -109,9 +118,33 @@ fun ExpensesScreen(
             }
         }
         else -> {
-            val expenses = uiState.expenses
+            val expenses = uiState.filteredExpenses
             Scaffold(
                 modifier = modifier,
+                bottomBar = {
+                    Text(text = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                fontFamily = poppinsBold
+                            )
+                        ) {
+                            append("Total: ")
+                        }
+                        withStyle(
+                            style = SpanStyle(
+                                fontFamily = poppins,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        ) {
+                            append(formatCurrency(uiState.totalExpenses))
+                        }
+                    }, modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp, start = 30.dp, end = 30.dp),
+                        maxLines = 1,
+                        fontSize = 25.sp
+                    )
+                },
                 floatingActionButton = {
                     FloatingActionButton(
                         onClick = {
@@ -126,31 +159,56 @@ fun ExpensesScreen(
                 }
             ) { paddingValues ->
                 Log.v("TAG", "$paddingValues")
-                if (expenses.isEmpty()) {
-                    Box(
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(20.dp),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = "There are no expenses added yet! click on the button below to add an expense",
-                            fontFamily = poppins,
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.ExtraBold
+                        ExpenseRange.entries.forEach { range ->
+                            TextButton(
+                                colors = ButtonDefaults.buttonColors(
+                                    contentColor = if ( uiState.selectedExpenseRange == range ) myPrimary else Color.DarkGray,
+                                    containerColor = Color.Transparent
+                                ),
+                                onClick = {
+                                    expensesViewModel.onEvent(ExpensesUiEvents.SelectedExpenseRange(range))
+                                }) {
+                                Text(text = range.name, fontFamily = poppins, fontWeight = FontWeight.ExtraBold)
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                    }
+                    if (expenses.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .padding(30.dp)
+                                .fillMaxWidth().weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "There are no ${uiState.selectedExpenseRange.name.lowercase()} expenses found!",
+                                fontFamily = poppins,
+                                fontSize = 16.sp,
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                    } else {
+                        ExpensesList(
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            expenses = expenses,
+                            onLongPress = {
+                                if ( !uiState.deletingExpense ) {
+                                    expensesViewModel.onEvent(ExpensesUiEvents.ExpenseSelected(it))
+                                }
+                            }
                         )
                     }
-                } else {
-                    ExpensesList(
-                        modifier = Modifier,
-                        expenses = expenses,
-                        onLongPress = {
-                            if ( !uiState.deletingExpense ) {
-                                expensesViewModel.onEvent(ExpensesUiEvents.ExpenseSelected(it))
-                            }
-                        }
-                    )
                 }
             }
         }

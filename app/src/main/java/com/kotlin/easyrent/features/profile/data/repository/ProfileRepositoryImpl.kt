@@ -50,8 +50,14 @@ class ProfileRepositoryImpl @Inject constructor(
 
     override suspend fun updateBio(bio: String): ServiceResponse<Any> {
         return try {
-            val task = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!).update("about", bio).await()
-            ServiceResponse.Success(task)
+            firestore.runTransaction {
+                val docRef = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!)
+                it.update(
+                    docRef,
+                    "about", bio
+                )
+            }.await()
+            ServiceResponse.Success(Unit)
         } catch (e:Exception) {
             Log.e(TAG, "${e.message}")
             if ( e is IOException ) {
@@ -68,8 +74,14 @@ class ProfileRepositoryImpl @Inject constructor(
                 "firstName" to firstName,
                 "lastName" to lastName
             )
-            val task = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!).update(myMap).await()
-            ServiceResponse.Success(task)
+            firestore.runTransaction {
+                val docRef = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!)
+                it.update(
+                    docRef,
+                    myMap
+                )
+            }.await()
+            ServiceResponse.Success(Unit)
         } catch (e:Exception) {
             Log.e(TAG, "${e.message}")
             if ( e is IOException ) {
@@ -82,8 +94,14 @@ class ProfileRepositoryImpl @Inject constructor(
 
     override suspend fun updateTel(tel: String): ServiceResponse<Any> {
         return try {
-            val task = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!).update("contactNumber", tel).await()
-            ServiceResponse.Success(task)
+            firestore.runTransaction {
+                val docRef = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!)
+                it.update(
+                    docRef,
+                    "contactNumber", tel
+                )
+            }.await()
+            ServiceResponse.Success(Unit)
         } catch (e:Exception) {
             Log.e(TAG, "${e.message}")
             if ( e is IOException ) {
@@ -96,8 +114,14 @@ class ProfileRepositoryImpl @Inject constructor(
 
     override suspend fun updateAddress(address: String): ServiceResponse<Any> {
         return try {
-            val task = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!).update("address", address).await()
-            ServiceResponse.Success(task)
+            firestore.runTransaction {
+                val docRef = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!)
+                it.update(
+                    docRef,
+                    "address", address
+                )
+            }.await()
+            ServiceResponse.Success(Unit)
         } catch (e:Exception) {
             Log.e(TAG, "${e.message}")
             if ( e is IOException ) {
@@ -110,8 +134,14 @@ class ProfileRepositoryImpl @Inject constructor(
 
     override suspend fun updateDOB(dob: Long): ServiceResponse<Any> {
         return try {
-            val task = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!).update("dateOfBirth", dob).await()
-            ServiceResponse.Success(task)
+            firestore.runTransaction {
+                val docRef = firestore.collection(Collections.LANDLORDS).document(firebaseAuth.uid!!)
+                it.update(
+                    docRef,
+                    "dateOfBirth", dob
+                )
+            }.await()
+            ServiceResponse.Success(Unit)
         } catch (e:Exception) {
             Log.e(TAG, "${e.message}")
             ServiceResponse.Error(0)

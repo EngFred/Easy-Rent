@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
@@ -76,15 +77,12 @@ class DashboardRepositoryImpl @Inject constructor(
     override fun getExpectedRevenue(): Flow<ServiceResponse<Double>> {
         return channelFlow {
             send(ServiceResponse.Idle)
-            rentalsDao.getTotalExpectedRevenue().collect { totalRevenue ->
-                rentalsDao.getTotalOccupiedRoomsCount().collect { occupiedRooms ->
-                    val expectedRevenue = totalRevenue * occupiedRooms
-                    Log.wtf("%", "Expected Revenue: $expectedRevenue")
-                    Log.wtf("%", "Occupied rooms: $occupiedRooms")
-                    Log.wtf("%", "MonthlyPayments: $totalRevenue")
-                    send(ServiceResponse.Success(expectedRevenue))
-                }
+            var expectedRevenue = 0.0 //160000
+            val rentals = rentalsDao.getAllRentals().first()
+            rentals.forEach { rental ->
+                expectedRevenue += (rental.monthlyPayment*rental.occupiedRooms)
             }
+            send(ServiceResponse.Success(expectedRevenue))
         }.catch{
             Log.e(TAG, it.message.toString())
             emit(ServiceResponse.Error(R.string.unknown_error))

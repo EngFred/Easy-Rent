@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import com.kotlin.easyrent.core.cache.CacheDatabase
+import com.kotlin.easyrent.core.cache.MIGRATION_2_1
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,7 +34,8 @@ object LocalModule {
             context,
             CacheDatabase::class.java,
             "easyRateCache.db"
-        ).fallbackToDestructiveMigration()
+        ).addMigrations(MIGRATION_2_1)
+            .fallbackToDestructiveMigration()
             .build()
     }
 

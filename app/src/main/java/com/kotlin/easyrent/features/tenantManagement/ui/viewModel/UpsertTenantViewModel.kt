@@ -178,8 +178,6 @@ class UpsertTenantViewModel @Inject constructor(
             address = _uiState.value.address?.trim(),
             rentalName = _uiState.value.rentalName!!,
             moveInDate = _uiState.value.moveInDate ?: Date().time,
-            month = getCurrentMonthAndYear().first,
-            year = getCurrentMonthAndYear().second,
             rentalId = _uiState.value.rentalId!!,
             profilePhotoUrl = _uiState.value.imageUrl,
             description = _uiState.value.description?.trim(),

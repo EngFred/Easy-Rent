@@ -2,6 +2,7 @@ package com.kotlin.easyrent.features.expenseTracking.ui.screens.expenses
 
 import androidx.annotation.StringRes
 import com.kotlin.easyrent.features.expenseTracking.domain.modal.Expense
+import com.kotlin.easyrent.features.expenseTracking.domain.modal.ExpenseRange
 
 data class ExpensesUIState(
     val isLoading: Boolean = true,
@@ -10,7 +11,10 @@ data class ExpensesUIState(
 
     val expense: Expense? = null,
 
-    val expenses: List<Expense> = emptyList(),
+    val allExpenses: List<Expense> = emptyList(),
+    val filteredExpenses: List<Expense> = emptyList(),
+    val totalExpenses: Double = 0.0,
+    val selectedExpenseRange: ExpenseRange = ExpenseRange.Daily,
 
     val showDeleteExpenseDialog: Boolean = false,
     val deletingExpense: Boolean = false,

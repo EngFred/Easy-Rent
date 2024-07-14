@@ -35,7 +35,7 @@ import com.kotlin.easyrent.core.theme.splashBg
 import com.kotlin.easyrent.features.expenseTracking.data.worker.ExpensesSyncWorker
 import com.kotlin.easyrent.features.paymentTracking.data.worker.PaymentsSyncWorker
 import com.kotlin.easyrent.features.rentalManagement.data.worker.RentalsSyncWorker
-import com.kotlin.easyrent.features.tenantManagement.data.worker.DaysCalculationWorker
+import com.kotlin.easyrent.features.tenantManagement.data.worker.ResetBalanceWorker
 import com.kotlin.easyrent.features.tenantManagement.data.worker.TenantsSyncWorker
 import com.kotlin.easyrent.utils.getCurrentMonthDays
 import com.kotlin.easyrent.utils.setLocale
@@ -115,9 +115,6 @@ class MainActivity : ComponentActivity() {
         val workerConstraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED).build()
 
-        val workerConstraints2 = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
-
         //payments
         val paymentsSyncRequest = PeriodicWorkRequestBuilder<PaymentsSyncWorker>(
             repeatInterval = Duration.ofMinutes(15),
@@ -144,10 +141,10 @@ class MainActivity : ComponentActivity() {
         ).setConstraints(workerConstraints).build()
 
         //days in rental
-        val daysInRentalSyncRequest = PeriodicWorkRequestBuilder<DaysCalculationWorker>(
-            repeatInterval = Duration.ofHours(4),
-            flexTimeInterval = Duration.ofHours(2)
-        ).setConstraints(workerConstraints2).build()
+        val resetBalanceSyncRequest = PeriodicWorkRequestBuilder<ResetBalanceWorker>(
+            repeatInterval = Duration.ofDays(1),
+            flexTimeInterval = Duration.ofHours(12)
+        ).build()
 
         WorkManager.getInstance(applicationContext)
             .apply {
@@ -177,11 +174,12 @@ class MainActivity : ComponentActivity() {
                 )
 
                 enqueueUniquePeriodicWork(
-                    "days_in_rental_sync",
+                    "reset_balance_sync",
                     ExistingPeriodicWorkPolicy.KEEP,
-                    daysInRentalSyncRequest
+                    resetBalanceSyncRequest
                 )
             }
     }
 }
+
 

@@ -1,6 +1,5 @@
 package com.kotlin.easyrent.features.tenantManagement.domain.modal
 
-import com.kotlin.easyrent.utils.getCurrentMonthAndYear
 import java.util.Date
 
 data class Tenant(
@@ -12,8 +11,7 @@ data class Tenant(
     val rentalId: String,
     val rentalName: String,
     val unpaidMonths: Int = 0,
-    val month: String = getCurrentMonthAndYear().first,
-    val year: Int = getCurrentMonthAndYear().second,
+    val lastResetDate: Long = Date().time,
     val moveInDate: Long = Date().time,
     val address: String? = null,
     val profilePhotoUrl: String? = null,

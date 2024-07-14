@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.kotlin.easyrent.core.theme.myPrimary
 import com.kotlin.easyrent.core.theme.poppins
 import com.kotlin.easyrent.core.theme.poppinsBold
+import com.kotlin.easyrent.core.theme.teal
 import com.kotlin.easyrent.features.paymentTracking.domain.modal.Payment
 import com.kotlin.easyrent.utils.formatCurrency
 import com.kotlin.easyrent.utils.formatDate
@@ -49,7 +51,11 @@ fun PaymentItem(
         CustomText(title = "Amount", value = formatCurrency(payment.amount))
         CustomText(title = "Date", value = formatDate(payment.date, "MMM dd, yyyy"))
         val paymentStatus = if( payment.completed ) "Completed" else "Pending"
-        CustomText(title = "Status", value = paymentStatus)
+        CustomText(
+            title = "Status",
+            value = paymentStatus,
+            valueColor = if(payment.completed) teal else Color.DarkGray
+        )
         Text(
             text = if (payment.isSynced) "Synced" else "Not synced",
             fontFamily = poppinsBold,
@@ -65,7 +71,8 @@ fun PaymentItem(
 fun CustomText(
     modifier: Modifier = Modifier,
     title: String,
-    value: String
+    value: String,
+    valueColor: Color = Color.DarkGray
 ) {
 
     Text(
@@ -80,7 +87,8 @@ fun CustomText(
             withStyle(
                 style = SpanStyle(
                     fontFamily = poppins,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.ExtraBold,
+                    color = valueColor
                 )
             ) {
                 append(value)

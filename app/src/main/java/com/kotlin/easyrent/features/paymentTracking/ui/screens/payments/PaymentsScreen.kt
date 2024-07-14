@@ -2,11 +2,15 @@ package com.kotlin.easyrent.features.paymentTracking.ui.screens.payments
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,6 +22,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -113,7 +118,7 @@ fun PaymentsScreen(
             }
         }
         else -> {
-            val payments = uiState.payments
+            val allPayments = uiState.allPayments
             Scaffold(
                 modifier = modifier,
                 floatingActionButton = {
@@ -130,7 +135,7 @@ fun PaymentsScreen(
                 }
             ) { paddingValues ->
                 Log.v("TAG", "$paddingValues")
-                if (payments.isEmpty()) {
+                if (allPayments.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -146,15 +151,84 @@ fun PaymentsScreen(
                         )
                     }
                 } else {
-                    PaymentsList(
-                        modifier = Modifier,
-                        payments = payments,
-                        onLongPress = {
-                            if ( !uiState.deletingPayment ) {
-                                paymentsViewModel.onEvent(PaymentsUiEvents.PaymentSelected(it))
+                    val allTenants = uiState.tenants //to sho tenants' names
+                    val filteredPayments = uiState.filteredPayments
+
+                    Column(
+                        modifier =Modifier.fillMaxSize()
+                    ) {
+                        if ( allTenants.isNotEmpty() ) {
+                            LazyRow(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                item {
+                                    Spacer(modifier = Modifier.size(10.dp))
+                                    OutlinedButton(onClick = {
+                                        paymentsViewModel.onEvent(PaymentsUiEvents.SelectedAllPayments)
+                                    }, colors = ButtonDefaults.buttonColors(
+                                        containerColor = if ( uiState.selectedTenant == null ) myPrimary else Color.Transparent,
+                                        contentColor = if ( uiState.selectedTenant == null ) Color.White else myPrimary),
+                                        border = BorderStroke(
+                                            width = 1.dp,
+                                            color = if (uiState.selectedTenant == null) myPrimary else Color.Gray
+                                        )
+                                    ) {
+                                        Text(
+                                            text = "All",
+                                            fontFamily = poppins,
+                                            fontWeight = FontWeight.ExtraBold
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.size(10.dp))
+                                }
+                                items(allTenants.size) {
+                                    OutlinedButton(onClick = {
+                                        paymentsViewModel.onEvent(PaymentsUiEvents.SelectedTenant(allTenants[it]))
+                                    }, colors = ButtonDefaults.buttonColors(
+                                        containerColor = if ( uiState.selectedTenant == allTenants[it] ) myPrimary else Color.Transparent,
+                                        contentColor = if ( uiState.selectedTenant == allTenants[it] ) Color.White else myPrimary),
+                                        border = BorderStroke(
+                                            width = 1.dp,
+                                            color = if (uiState.selectedTenant == allTenants[it]) myPrimary else Color.Gray
+                                        )
+                                    ) {
+                                        Text(
+                                            text = allTenants[it].name.replaceFirstChar { it.uppercase() },
+                                            fontFamily = poppins,
+                                            fontWeight = FontWeight.ExtraBold
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.size(10.dp))
+                                }
                             }
                         }
-                    )
+                        if (uiState.filteredPayments.isEmpty() && uiState.selectedTenant != null) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "There are no payments for ${uiState.selectedTenant.name.replaceFirstChar { it.uppercase() }} found!",
+                                    fontFamily = poppins,
+                                    fontSize = 16.sp,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            }
+                        }else {
+                            PaymentsList(
+                                modifier = Modifier,
+                                payments = filteredPayments.ifEmpty { allPayments },
+                                onLongPress = {
+                                    if ( !uiState.deletingPayment ) {
+                                        paymentsViewModel.onEvent(PaymentsUiEvents.PaymentSelected(it))
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }

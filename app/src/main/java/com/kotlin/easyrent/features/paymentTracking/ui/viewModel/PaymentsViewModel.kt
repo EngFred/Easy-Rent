@@ -8,6 +8,8 @@ import com.kotlin.easyrent.features.paymentTracking.domain.usecase.DeletePayment
 import com.kotlin.easyrent.features.paymentTracking.domain.usecase.GetAllPaymentsUseCase
 import com.kotlin.easyrent.features.paymentTracking.ui.screens.payments.PaymentsUIState
 import com.kotlin.easyrent.features.paymentTracking.ui.screens.payments.PaymentsUiEvents
+import com.kotlin.easyrent.features.tenantManagement.domain.modal.Tenant
+import com.kotlin.easyrent.features.tenantManagement.domain.usecase.GetAllTenantsUseCase
 import com.kotlin.easyrent.utils.ServiceResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class PaymentsViewModel @Inject constructor(
     private val getAllPaymentsUseCase: GetAllPaymentsUseCase,
-    private val deletePaymentUseCase: DeletePaymentUseCase
+    private val deletePaymentUseCase: DeletePaymentUseCase,
+    private val getAllTenantsUseCase: GetAllTenantsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PaymentsUIState())
@@ -28,6 +31,7 @@ class PaymentsViewModel @Inject constructor(
 
     init {
         getPayments()
+        getTenants()
     }
 
     fun onEvent(event: PaymentsUiEvents){
@@ -58,6 +62,39 @@ class PaymentsViewModel @Inject constructor(
                     )
                 }
             }
+
+            is PaymentsUiEvents.SelectedTenant -> {
+                if ( _uiState.value.selectedTenant != event.tenant ) {
+                    _uiState.update {
+                        it.copy(
+                            selectedTenant = event.tenant
+                        )
+                    }
+                    filterTenantsPayment(event.tenant)
+                }
+            }
+
+            PaymentsUiEvents.SelectedAllPayments -> {
+                if ( _uiState.value.selectedTenant != null) {
+                    _uiState.update {
+                        it.copy(
+                            selectedTenant = null,
+                            filteredPayments = it.allPayments
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun filterTenantsPayment(tenant: Tenant) {
+        val filteredTenantPayments = _uiState.value.allPayments.filter { payment ->
+            payment.tenantId == tenant.id
+        }
+        _uiState.update {
+            it.copy(
+                filteredPayments = filteredTenantPayments
+            )
         }
     }
 
@@ -77,7 +114,23 @@ class PaymentsViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            payments = result.data
+                            allPayments = result.data
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getTenants()  = viewModelScope.launch {
+        getAllTenantsUseCase().collect { result ->
+            when(result) {
+                is ServiceResponse.Error -> Unit
+                ServiceResponse.Idle -> Unit
+                is ServiceResponse.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            tenants = result.data
                         )
                     }
                 }

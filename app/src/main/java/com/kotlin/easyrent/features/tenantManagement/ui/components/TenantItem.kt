@@ -30,7 +30,9 @@ import com.kotlin.easyrent.R
 import com.kotlin.easyrent.core.presentation.components.SyncIndicator
 import com.kotlin.easyrent.core.theme.poppins
 import com.kotlin.easyrent.core.theme.poppinsBold
+import com.kotlin.easyrent.core.theme.teal
 import com.kotlin.easyrent.features.tenantManagement.domain.modal.Tenant
+import com.kotlin.easyrent.utils.formatCurrency
 import com.kotlin.easyrent.utils.formatDate
 
 @Composable
@@ -45,7 +47,7 @@ fun TenantItem(
             .clickable { onClick(tenant.id) }
             .padding(horizontal = 10.dp, vertical = 10.dp)
             .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         Image(
             painterResource(id = R.drawable.profile_picture),
@@ -55,7 +57,7 @@ fun TenantItem(
                 .size(60.dp)
                 .clip(CircleShape)
         )
-        Spacer(modifier = Modifier.size(10.dp))
+        Spacer(modifier = Modifier.size(8.dp))
         Column{
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -78,29 +80,40 @@ fun TenantItem(
                 )
             }
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Home,
-                        contentDescription = null,
-                        tint = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = tenant.rentalName.replaceFirstChar { it.uppercase() },
-                        fontFamily = poppins,
-                        maxLines = 1,
-                        fontWeight = FontWeight.ExtraBold,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                SyncIndicator(isSynced = tenant.isSynced)
+                Text(
+                    text = if (tenant.balance == 0.0 ) "Completed" else formatCurrency(tenant.balance),
+                    fontFamily = poppins,
+                    modifier = Modifier.weight(1f).padding(end = 10.dp),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (tenant.balance == 0.0 ) teal else Color.DarkGray
+                )
+                SyncIndicator(
+                    isSynced = tenant.isSynced,
+                    unpaidMonths = tenant.unpaidMonths
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Home,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(19.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = tenant.rentalName.replaceFirstChar { it.uppercase() },
+                    fontFamily = poppins,
+                    maxLines = 1,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }
