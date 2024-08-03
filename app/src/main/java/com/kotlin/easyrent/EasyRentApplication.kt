@@ -103,7 +103,13 @@ class EasyRentApplication : Application(),
                     firestore,
                     firebaseAuth
                 )
-                else -> throw IllegalArgumentException("Unknown worker class: $workerClassName")
+                else -> return ResetBalanceWorker(
+                    appContext,
+                    workerParameters,
+                    cacheDatabase,
+                    firestore,
+                    firebaseAuth
+                )
             }
         }
     }
